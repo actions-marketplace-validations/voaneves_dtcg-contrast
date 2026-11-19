@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0] - 2026-11-19
+
+First stable production release (`v1.0.0`) with a frozen v1 public ESM/TypeScript API and zero npm dependencies.
+
+### Added
+- `--flag=value` CLI argument parsing (`--config=...`, `--format=...`, `--level=...`, etc.) and `$schema` autocomplete via [dtcg-contrast.schema.json](./dtcg-contrast.schema.json) (JSON Schema Draft 2020-12).
+- Optional sticky pull-request comment mode (`comment-pr: 'true'` / `token`) in the composite GitHub Action using built-in `fetch`.
+- `.github/dependabot.yml` weekly updates for GitHub Actions.
+- Runtime ESM export <-> `types/index.d.ts` parity test, UTF-8 BOM stripping across config/tokens/fixer, prototype-key guards, and executable (`100755`) `bin/dtcg-contrast.mjs`.
+
+### Changed
+- Raised baseline runtime engine to active Node.js LTS `>=22.0.0` and updated CI matrix to Node `22`, `24`, `26` on Ubuntu and Node `24` on Windows.
+
 ## [0.2.0] - 2026-11-19
 
 ### Added

@@ -8,17 +8,15 @@
 
 <p>
   <a href="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml"><img src="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/release-v0.2.0-b80000?style=flat-square" alt="v0.2.0" /></a>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/release-v1.0.0-b80000?style=flat-square" alt="v1.0.0" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-0A0A0A?style=flat-square" alt="MIT License" /></a>
-  <img src="https://img.shields.io/badge/node-%3E%3D20-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=20" />
+  <img src="https://img.shields.io/badge/node-%3E%3D22-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=22" />
   <img src="https://img.shields.io/badge/dependencies-0-3fb950?style=flat-square" alt="Zero Dependencies" />
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
   <img src="https://img.shields.io/badge/standards-WCAG%202.2%20%2B%20APCA-0A0A0A?style=flat-square" alt="WCAG 2.2 and APCA" />
 </p>
 
-> **Pre-1.0 Preview (`v0.2.0`):** Includes safe OKLCH `--fix` write-back, glob pair wildcards, and exact line/column SARIF 2.1.0 PR annotations. [Issues & feedback](https://github.com/voaneves/dtcg-contrast/issues) shape the path to `v1.0.0`.
-
-<img src="./assets/demo.svg" alt="dtcg-contrast terminal output showing WCAG 2.2, APCA, and OKLCH auto-fix suggestions" width="820" />
+<img src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/demo.svg" alt="dtcg-contrast terminal output showing WCAG 2.2, APCA, and OKLCH auto-fix suggestions" width="820" />
 
 </div>
 
@@ -30,7 +28,7 @@
 | W3C DTCG 2025.10 (`$root`, `{alias}`, `$extensions`) | ✅ Native | ❌ Sees only compiled CSS | ⚠️ Varies by plugin |
 | Dual WCAG 2.2 + APCA-W3 + alpha compositing | ✅ Built-in | ⚠️ WCAG only (no APCA) | ⚠️ Often partial |
 | Hue-preserving OKLCH auto-fix (`--fix` / `--dry-run`) | ✅ Binary-searched + write-back | ❌ Reports failures only | ❌ Manual tweaking |
-| CI outputs (SARIF 2.1.0 spans, Job Summary, HTML Matrix) | ✅ Built-in | ⚠️ Custom wiring | ❌ No CI gate |
+| CI outputs (SARIF 2.1.0 spans, PR comment, HTML Matrix) | ✅ Built-in | ⚠️ Custom wiring | ❌ No CI gate |
 
 ---
 
@@ -39,31 +37,32 @@
 ### 1. Instant one-off color check (`check`)
 
 ```bash
-npx dtcg-contrast check "#f50000" "#f4ead4" --level AA
+npx dtcg-contrast check "#f50000" "#f4ead4" --level=AA
 ```
 
-### 2. Scaffold config from your existing DTCG tokens (`init`)
+### 2. Scaffold config with `$schema` autocomplete (`init`)
 
 ```bash
 npx dtcg-contrast init ./tokens
 # Auto-detects $extensions theme modes (e.g. vn.dark, com.figma.modes.dark)
-# and writes dtcg-contrast.config.json with discovered semantic & component pairs
+# and writes dtcg-contrast.config.json with $schema and discovered pairs
 ```
 
 ### 3. Auto-fix failing tokens in OKLCH (`--fix` / `--dry-run`)
 
 ```bash
 # Preview changes without modifying disk:
-npx dtcg-contrast --config dtcg-contrast.config.json --fix --dry-run
+npx dtcg-contrast --config=dtcg-contrast.config.json --fix --dry-run
 
 # Write hue-preserving OKLCH fixes directly to failing foreground tokens (or $extensions mode):
-npx dtcg-contrast --config dtcg-contrast.config.json --fix
+npx dtcg-contrast --config=dtcg-contrast.config.json --fix
 ```
 
-### 4. Config with Glob Wildcards & Exclusions (`dtcg-contrast.config.json`)
+### 4. Config with `$schema`, Globs & Exclusions (`dtcg-contrast.config.json`)
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/dtcg-contrast.schema.json",
   "tokens": ["./tokens.json"],
   "themes": [
     { "name": "light" },
@@ -89,6 +88,8 @@ npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json --fix -
 
 ## CLI Options
 
+Supports both `--flag value` and `--flag=value` forms.
+
 | Flag / Subcommand | Description | Default |
 | :--- | :--- | :--- |
 | `[paths...]` | DTCG token `.json` files or directories | — |
@@ -110,15 +111,16 @@ Exit codes: `0` all pass, `1` one or more contrast failures, `2` invalid config/
 
 ---
 
-## GitHub Action + SARIF Code Scanning
+## GitHub Action, Sticky PR Comments & SARIF
 
-Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Contrast Matrix, and exact line/column PR annotations via SARIF 2.1.0:
+Gate pull requests with a sticky PR comment, Markdown Job Summary, interactive HTML Contrast Matrix, and exact line/column PR diff annotations via SARIF 2.1.0:
 
 ```yaml
 - name: Design Token Contrast Gate
-  uses: voaneves/dtcg-contrast@v0.2.0
+  uses: voaneves/dtcg-contrast@v1
   with:
     config: dtcg-contrast.config.json
+    comment-pr: 'true'
     html-report: contrast-matrix.html
     sarif-report: contrast.sarif
     fail-on-error: 'false'
@@ -144,6 +146,8 @@ Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Co
 | `html-report` | `''` | Optional output path for standalone interactive HTML matrix |
 | `sarif-report` | `''` | Optional output path for SARIF 2.1.0 report |
 | `summary` | `'true'` | Append Markdown table to `$GITHUB_STEP_SUMMARY` |
+| `comment-pr` | `'false'` | Post or update a sticky contrast comment on pull requests |
+| `token` | `${{ github.token }}` | Token used when `comment-pr` is `'true'` |
 
 Outputs: `total`, `passed`, `failed`.
 
@@ -153,7 +157,7 @@ Outputs: `total`, `passed`, `failed`.
 
 ## Programmatic JS / TS API
 
-Zero runtime dependencies — works directly in Node `>=20` ESM and TypeScript projects (ships full [`types/index.d.ts`](./types/index.d.ts)):
+Zero runtime dependencies — works directly in Node `>=22` ESM and TypeScript projects (ships complete [`types/index.d.ts`](./types/index.d.ts)):
 
 ```js
 import {
@@ -176,15 +180,6 @@ if (report.summary.failed > 0) {
   applyFixes(edits, { dryRun: true });
 }
 ```
-
----
-
-## Roadmap (`v0.2.0` → `v1.0.0`)
-
-- **`v0.1.0`**: W3C DTCG 2025.10 (`$root`, `{alias}`, dotted `$extensions`), WCAG 2.2 + APCA-W3, OKLCH auto-fixer, `check` & `init`, 5 reporters (`pretty`, `markdown`, `json`, `html`, `sarif`), composite GitHub Action.
-- **`v0.2.0`** *(current)*: Safe OKLCH `--fix` / `--dry-run` write-back, glob pair wildcards + `exclude`, exact SARIF line/column regions, and cross-platform Windows CI hardening.
-- **`v0.3.0`**: Comment/formatting-preserving JSON patching, Style Dictionary / Tokens Studio config bridge, and automated PR sticky-comment action mode.
-- **`v1.0.0`**: Frozen public API + npm & GitHub Actions Marketplace general availability.
 
 ---
 
