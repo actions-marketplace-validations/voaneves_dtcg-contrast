@@ -7,7 +7,8 @@
 **Zero-dependency WCAG 2.2 &amp; APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 design tokens.**
 
 <p>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/release-v0.1.0-b80000?style=flat-square" alt="v0.1.0 pre-release" /></a>
+  <a href="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml"><img src="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/release-v0.2.0-b80000?style=flat-square" alt="v0.2.0" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-0A0A0A?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D20-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=20" />
   <img src="https://img.shields.io/badge/dependencies-0-3fb950?style=flat-square" alt="Zero Dependencies" />
@@ -15,7 +16,7 @@
   <img src="https://img.shields.io/badge/standards-WCAG%202.2%20%2B%20APCA-0A0A0A?style=flat-square" alt="WCAG 2.2 and APCA" />
 </p>
 
-> **Pre-1.0 Preview (`v0.1.0`):** Core math, W3C DTCG 2025.10 resolver, CLI, SARIF 2.1.0, and GitHub Action are live and tested. [Feedback & feature requests](https://github.com/voaneves/dtcg-contrast/issues) shape the road to `v1.0.0`.
+> **Pre-1.0 Preview (`v0.2.0`):** Includes safe OKLCH `--fix` write-back, glob pair wildcards, and exact line/column SARIF 2.1.0 PR annotations. [Issues & feedback](https://github.com/voaneves/dtcg-contrast/issues) shape the path to `v1.0.0`.
 
 <img src="./assets/demo.svg" alt="dtcg-contrast terminal output showing WCAG 2.2, APCA, and OKLCH auto-fix suggestions" width="820" />
 
@@ -28,8 +29,8 @@
 | Runs at token source (~15ms, zero deps) | ✅ Pre-CSS & pre-build | ❌ Needs built app + headless browser | ❌ Manual click per frame |
 | W3C DTCG 2025.10 (`$root`, `{alias}`, `$extensions`) | ✅ Native | ❌ Sees only compiled CSS | ⚠️ Varies by plugin |
 | Dual WCAG 2.2 + APCA-W3 + alpha compositing | ✅ Built-in | ⚠️ WCAG only (no APCA) | ⚠️ Often partial |
-| Hue-preserving OKLCH auto-fix (hex-verified) | ✅ Binary-searched | ❌ Reports failures only | ❌ Manual tweaking |
-| CI outputs (SARIF 2.1.0, Job Summary, HTML Matrix) | ✅ Built-in | ⚠️ Custom wiring | ❌ No CI gate |
+| Hue-preserving OKLCH auto-fix (`--fix` / `--dry-run`) | ✅ Binary-searched + write-back | ❌ Reports failures only | ❌ Manual tweaking |
+| CI outputs (SARIF 2.1.0 spans, Job Summary, HTML Matrix) | ✅ Built-in | ⚠️ Custom wiring | ❌ No CI gate |
 
 ---
 
@@ -49,13 +50,17 @@ npx dtcg-contrast init ./tokens
 # and writes dtcg-contrast.config.json with discovered semantic & component pairs
 ```
 
-### 3. Zero-config directory audit
+### 3. Auto-fix failing tokens in OKLCH (`--fix` / `--dry-run`)
 
 ```bash
-npx dtcg-contrast ./tokens --mode dark:vn.dark
+# Preview changes without modifying disk:
+npx dtcg-contrast --config dtcg-contrast.config.json --fix --dry-run
+
+# Write hue-preserving OKLCH fixes directly to failing foreground tokens (or $extensions mode):
+npx dtcg-contrast --config dtcg-contrast.config.json --fix
 ```
 
-### 4. Explicit CI gate (`dtcg-contrast.config.json`)
+### 4. Config with Glob Wildcards & Exclusions (`dtcg-contrast.config.json`)
 
 ```json
 {
@@ -65,7 +70,7 @@ npx dtcg-contrast ./tokens --mode dark:vn.dark
     { "name": "dark", "extensionPath": "vn.dark" }
   ],
   "pairs": [
-    { "fg": "color.text", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.text*", "bg": "color.surface*", "exclude": ["*-inverse", "*-signal"], "level": "AA" },
     { "fg": "color.signal-ink", "bg": "color.surface", "level": "AA" },
     { "fg": "color.line-strong", "bg": "color.surface", "level": "UI" }
   ]
@@ -76,8 +81,8 @@ Run the included production showcase (built from [`@voaneves/brand`](https://git
 
 ```bash
 npx dtcg-contrast --config examples/voaneves-brand/dtcg-contrast.config.json
-# Or see the OKLCH auto-fixer catch a failing pair:
-npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json
+# Or inspect a failing pair + live OKLCH dry-run fix:
+npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json --fix --dry-run
 ```
 
 ---
@@ -95,6 +100,8 @@ npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json
 | `--level <level>` | Threshold: `AA`, `AA-large`, `UI`, `AAA`, `AAA-large` | smart (`AA`/`UI`) |
 | `--min-apca <num>` | Require minimum APCA `\|Lc\|` across evaluated pairs | `0` |
 | `--mode <name:path>` | Add theme from `$extensions.<path>` (supports dotted keys) | `default` |
+| `--fix` | Write OKLCH fixes back to failing foreground tokens | `false` |
+| `--dry-run` | Preview `--fix` edits without modifying token files | `false` |
 | `--force` | Overwrite existing config file when running `init` | `false` |
 | `--no-fail` | Exit `0` even when pairs fail (advisory reports) | `false` |
 | `--no-color` | Disable 24-bit ANSI swatch output | `false` |
@@ -105,11 +112,11 @@ Exit codes: `0` all pass, `1` one or more contrast failures, `2` invalid config/
 
 ## GitHub Action + SARIF Code Scanning
 
-Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Contrast Matrix, and native PR Code Scanning annotations via SARIF 2.1.0:
+Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Contrast Matrix, and exact line/column PR annotations via SARIF 2.1.0:
 
 ```yaml
 - name: Design Token Contrast Gate
-  uses: voaneves/dtcg-contrast@v0.1.0
+  uses: voaneves/dtcg-contrast@v0.2.0
   with:
     config: dtcg-contrast.config.json
     html-report: contrast-matrix.html
@@ -118,7 +125,7 @@ Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Co
 
 - name: Upload SARIF to GitHub Code Scanning
   if: always()
-  uses: github/codeql-action/upload-sarif@v3
+  uses: github/codeql-action/upload-sarif@v4
   with:
     sarif_file: contrast.sarif
 ```
@@ -153,30 +160,30 @@ import {
   loadTokenSources,
   detectExtensionPaths,
   evaluatePairs,
-  suggestAccessibleColor,
-  formatSarif,
+  planFixes,
+  applyFixes,
 } from 'dtcg-contrast';
 
-const tree = loadTokenSources('./tokens');
-const modes = detectExtensionPaths(tree); // e.g. ['vn.dark']
-const report = evaluatePairs({
-  tokenTree: tree,
-  themes: [{ name: 'light' }, ...modes.map((m) => ({ name: m, extensionPath: m }))],
-});
+const tokenTree = loadTokenSources('./tokens');
+const themes = [
+  { name: 'light' },
+  ...detectExtensionPaths(tokenTree).map((m) => ({ name: m, extensionPath: m })),
+];
 
+const report = evaluatePairs({ tokenTree, themes });
 if (report.summary.failed > 0) {
-  console.log(suggestAccessibleColor('#f50000', '#f4ead4', { minWcag: 4.5 }));
-  // -> { hex: '#d70000', oklch: 'oklch(0.552 0.227 29.2)', wcag: 4.52, apca: 61.9, deltaL: -0.057 }
+  const { edits } = planFixes({ report, tokenTree, themes });
+  applyFixes(edits, { dryRun: true });
 }
 ```
 
 ---
 
-## Roadmap (`v0.1.0` → `v1.0.0`)
+## Roadmap (`v0.2.0` → `v1.0.0`)
 
-- **`v0.1.0`** *(current)*: W3C DTCG 2025.10 (`$root`, `{alias}`, dotted `$extensions`), WCAG 2.2 + APCA-W3, OKLCH auto-fixer, `check` & `init`, 5 reporters (`pretty`, `markdown`, `json`, `html`, `sarif`), composite GitHub Action.
-- **`v0.2.0`**: `--fix` mode to write OKLCH adjustments cleanly back to DTCG JSON token files (preserving formatting/comments) + automated GitHub PR comment action mode.
-- **`v0.3.0`**: Style Dictionary / Tokens Studio config bridge, glob pair wildcards (`color.text* on color.surface*`), and exact line/column source spans in SARIF.
+- **`v0.1.0`**: W3C DTCG 2025.10 (`$root`, `{alias}`, dotted `$extensions`), WCAG 2.2 + APCA-W3, OKLCH auto-fixer, `check` & `init`, 5 reporters (`pretty`, `markdown`, `json`, `html`, `sarif`), composite GitHub Action.
+- **`v0.2.0`** *(current)*: Safe OKLCH `--fix` / `--dry-run` write-back, glob pair wildcards + `exclude`, exact SARIF line/column regions, and cross-platform Windows CI hardening.
+- **`v0.3.0`**: Comment/formatting-preserving JSON patching, Style Dictionary / Tokens Studio config bridge, and automated PR sticky-comment action mode.
 - **`v1.0.0`**: Frozen public API + npm & GitHub Actions Marketplace general availability.
 
 ---

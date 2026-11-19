@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0] - 2026-11-19
+
+### Added
+- Safe `--fix` and `--dry-run` OKLCH write-back mode (`planFixes` / `applyFixes`), modifying failing foreground tokens or theme `$extensions` without mutating shared primitive/reference tokens.
+- Glob pair wildcards (`*`, `**`) and `exclude` pattern support in config `pairs` (`expandPairRules`, `globToRegExp`).
+- Exact 1-based `startLine` / `startColumn` JSON source tracking (`indexTokenLocations`) emitted as SARIF 2.1.0 `region` spans for inline PR diff annotations.
+
+### Fixed
+- Fixed cross-drive Windows path formatting in `dtcg-contrast init` (caught on GitHub Actions `windows-latest` runners).
+- Upgraded CI workflows to `actions/checkout@v7` and `actions/setup-node@v7` and expanded `action-dogfood` to both `ubuntu-latest` and `windows-latest`.
+
 ## [0.1.0] - 2026-11-19
 
 Initial pre-1.0 release (`v0.1.0`) — ready for real-world feedback on the path to `v1.0.0`.
