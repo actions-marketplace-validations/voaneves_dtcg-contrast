@@ -42,3 +42,8 @@ export {
   formatPretty,
   formatSarif,
 } from './reporters.mjs';
+
+export {
+  applyFixes,
+  planFixes,
+} from './fixer.mjs';

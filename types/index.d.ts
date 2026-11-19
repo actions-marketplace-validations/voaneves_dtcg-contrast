@@ -167,3 +167,36 @@ export function formatMarkdown(report: AuditReport): string;
 export function formatJson(report: AuditReport): string;
 export function formatHtml(report: AuditReport): string;
 export function formatSarif(report: AuditReport): string;
+
+export interface PlannedFix {
+  file: string;
+  uri: string;
+  theme: string;
+  token: string;
+  extensionPath: string | null;
+  oldHex: string;
+  newHex: string;
+  newOklch: string;
+  replacementValue: unknown;
+  unlinkedAlias: boolean;
+  wcagBefore: number;
+  wcagAfter: number;
+}
+
+export function planFixes(params: {
+  report: AuditReport;
+  tokenTree: Record<string, unknown>;
+  themes?: ThemeConfig[];
+}): {
+  edits: PlannedFix[];
+  skipped: Array<{ theme: string; token: string; reason: string }>;
+};
+
+export function applyFixes(
+  edits: PlannedFix[],
+  options?: { dryRun?: boolean }
+): {
+  applied: PlannedFix[];
+  filesModified: string[];
+  dryRun: boolean;
+};

@@ -196,6 +196,39 @@ describe('dtcg-contrast CLI', () => {
     assert.match(html, /pill-dep/);
   });
 
+  it('supports --fix --dry-run and --fix write-back without mutating shared primitives', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dtcg-fix-'));
+    try {
+      const tokensDest = path.join(tmpDir, 'tokens.json');
+      const cfgDest = path.join(tmpDir, 'demo-fail.config.json');
+      fs.copyFileSync(TOKENS_FILE, tokensDest);
+      fs.copyFileSync(FAIL_CFG, cfgDest);
+
+      const beforeText = fs.readFileSync(tokensDest, 'utf8');
+
+      const dry = runBin(['--config', cfgDest, '--fix', '--dry-run', '--no-color']);
+      assert.equal(dry.code, 1);
+      assert.match(dry.stdout, /\[dry-run\] Fixed .*color\.signal: #f50000 -> #d70000/);
+      assert.equal(fs.readFileSync(tokensDest, 'utf8'), beforeText);
+
+      const fix = runBin(['--config', cfgDest, '--fix', '--no-color']);
+      assert.equal(fix.code, 0);
+      assert.match(fix.stdout, /Fixed .*color\.signal: #f50000 -> #d70000/);
+      assert.match(fix.stdout, /Re-verified: 7\/7 pairs passing/);
+
+      const updated = JSON.parse(fs.readFileSync(tokensDest, 'utf8'));
+      assert.equal(updated.color.signal.$value.hex, '#d70000');
+      assert.equal(updated.ref.color.red['600'].$value.hex, '#f50000');
+      assert.equal(updated.color['surface-signal'].$value, '{ref.color.red.600}');
+
+      const recheck = runBin(['--config', cfgDest, '--no-color']);
+      assert.equal(recheck.code, 0);
+      assert.match(recheck.stdout, /PASS — 7\/7 pairs passed/);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it('exits 2 on invalid path or option', () => {
     const missing = runBin(['./does-not-exist.json']);
     assert.equal(missing.code, 2);

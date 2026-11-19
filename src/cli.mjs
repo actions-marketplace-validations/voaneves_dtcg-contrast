@@ -10,6 +10,7 @@ import {
   suggestAccessibleColor,
   wcagContrast,
 } from './contrast.mjs';
+import { applyFixes, planFixes } from './fixer.mjs';
 import {
   formatHtml,
   formatJson,
@@ -41,6 +42,8 @@ Options:
       --level <level>     Default WCAG threshold: AA | AA-large | AAA | AAA-large | UI (default: AA)
       --min-apca <num>    Minimum APCA |Lc| score (e.g. 60)
       --mode <name:path>  Add theme via DTCG $extensions path (repeatable, e.g. dark:vn.dark)
+      --fix               Write hue-preserving OKLCH fixes back to failing foreground tokens
+      --dry-run           Preview --fix changes without modifying files
       --force             Overwrite existing file on init
       --no-fail           Exit with code 0 even when pairs fail
       --no-color          Disable ANSI terminal colors
@@ -57,6 +60,8 @@ function parseArgs(argv) {
     level: undefined,
     minApca: 0,
     modes: [],
+    fix: false,
+    dryRun: false,
     force: false,
     noFail: false,
     color: !process.env.NO_COLOR,
@@ -80,6 +85,8 @@ function parseArgs(argv) {
     else if (arg === '--level') opts.level = next();
     else if (arg === '--min-apca') opts.minApca = Number(next());
     else if (arg === '--mode') opts.modes.push(next());
+    else if (arg === '--fix') opts.fix = true;
+    else if (arg === '--dry-run') opts.dryRun = true;
     else if (arg === '--force') opts.force = true;
     else if (arg === '--no-fail') opts.noFail = true;
     else if (arg === '--no-color') opts.color = false;
@@ -371,14 +378,46 @@ export async function runCli(argv = process.argv.slice(2)) {
         ? buildThemesFromModes(opts.modes)
         : cfg?.themes ?? [{ name: 'default' }];
 
-    const report = evaluatePairs({
-      tokenTree,
-      themes,
+    const evalOpts = {
       pairs: cfg?.pairs,
       auto: cfg?.auto || !cfg?.pairs,
       level: cfg?.level ?? opts.level,
       minApca: cfg?.minApca ?? opts.minApca,
-    });
+    };
+
+    let report = evaluatePairs({ tokenTree, themes, ...evalOpts });
+
+    if (opts.fix && report.summary.failed > 0) {
+      const { edits, skipped } = planFixes({ report, tokenTree, themes });
+      const { applied } = applyFixes(edits, { dryRun: opts.dryRun });
+      const logStream =
+        opts.format === 'pretty' || Boolean(opts.output) ? process.stdout : process.stderr;
+      const prefix = opts.dryRun ? '[dry-run] ' : '';
+
+      for (const edit of applied) {
+        const aliasNote = edit.unlinkedAlias ? ' [unlinked alias]' : '';
+        const modeNote = edit.extensionPath ? ` ($extensions.${edit.extensionPath})` : '';
+        logStream.write(
+          `${prefix}Fixed ${edit.uri} -> ${edit.token}${modeNote}: ${edit.oldHex} -> ${edit.newHex} (${edit.wcagBefore.toFixed(2)}:1 -> ${edit.wcagAfter.toFixed(2)}:1)${aliasNote}\n`
+        );
+      }
+      for (const s of skipped) {
+        logStream.write(`${prefix}Skipped ${s.theme} ${s.token}: ${s.reason}\n`);
+      }
+
+      if (opts.dryRun) {
+        if (opts.format !== 'pretty' || opts.output) {
+          emitReport(report, opts);
+        }
+        return opts.noFail ? 0 : 1;
+      }
+
+      const freshTree = loadTokenSources(tokenInputs);
+      report = evaluatePairs({ tokenTree: freshTree, themes, ...evalOpts });
+      logStream.write(
+        `Re-verified: ${report.summary.passed}/${report.summary.total} pairs passing\n`
+      );
+    }
 
     return emitReport(report, opts);
   } catch (err) {
