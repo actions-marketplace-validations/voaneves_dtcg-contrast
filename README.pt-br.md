@@ -8,7 +8,8 @@
 
 <p>
   <a href="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml"><img src="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml/badge.svg" alt="Status do CI" /></a>
-  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/versão-v1.0.0-b80000?style=flat-square" alt="v1.0.0" /></a>
+  <a href="https://www.npmjs.com/package/dtcg-contrast"><img src="https://img.shields.io/npm/v/dtcg-contrast?style=flat-square&color=b80000&logo=npm&logoColor=white" alt="Versão no npm" /></a>
+  <a href="https://www.npmjs.com/package/dtcg-contrast"><img src="https://img.shields.io/npm/dm/dtcg-contrast?style=flat-square&color=0A0A0A" alt="Downloads mensais no npm" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/licença-MIT-0A0A0A?style=flat-square" alt="Licença MIT" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=22" />
   <img src="https://img.shields.io/badge/dependências-0-3fb950?style=flat-square" alt="Zero Dependências" />
