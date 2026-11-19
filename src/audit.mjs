@@ -15,6 +15,7 @@ const FALLBACK_FG_RE = /(^|[.-])ink([.-]|$)/i;
 const UI_LEVEL_RE = /(^|[.-])(border|line|focus|icon|stroke|ring|outline)([.-]|$)/i;
 const ON_TAG_RE = /-on-([a-z0-9-]+)$/i;
 const SPECIAL_BG_RE = /(^|[.-])(inverse|signal|brand|accent|danger|success|warning)([.-]|$)/i;
+const STATE_SUFFIX_RE = /\.(hover|active|focus|disabled|pressed|selected)$/i;
 
 /**
  * Heuristically discover sensible foreground/background token pairs for zero-config audits.
@@ -57,6 +58,14 @@ export function discoverPairs(tokenMap, options = {}) {
       if (fgHasOwnBg && !bg.startsWith(fgVariantPrefix)) continue;
       if (isComponentFg && isComponentBg && !bg.startsWith(fgVariantPrefix)) {
         continue;
+      }
+      if (isComponentFg && isComponentBg) {
+        const fgState = fg.match(STATE_SUFFIX_RE)?.[1]?.toLowerCase() ?? '';
+        const bgState = bg.match(STATE_SUFFIX_RE)?.[1]?.toLowerCase() ?? '';
+        if (fgState !== bgState) {
+          if (fgState && tokenMap.has(`${bg}.${fgState}`)) continue;
+          if (bgState && tokenMap.has(`${fg}.${bgState}`)) continue;
+        }
       }
 
       if (fgTargetTag) {

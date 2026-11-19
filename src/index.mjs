@@ -38,4 +38,5 @@ export {
   formatJson,
   formatMarkdown,
   formatPretty,
+  formatSarif,
 } from './reporters.mjs';

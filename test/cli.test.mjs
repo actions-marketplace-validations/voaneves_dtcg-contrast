@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { formatHtml } from '../src/index.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BIN = path.join(ROOT, 'bin', 'dtcg-contrast.mjs');
@@ -81,15 +82,98 @@ describe('dtcg-contrast CLI', () => {
       const html = fs.readFileSync(htmlPath, 'utf8');
       assert.match(html, /<!doctype html>/i);
       assert.match(html, /DTCG Contrast Matrix/);
+      assert.match(html, /data-status-filter/);
+      assert.match(html, /data-theme-filter/);
+      assert.match(html, /searchInput/);
+      assert.match(html, /data-copy/);
       assert.match(html, /FAIL/);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
 
+    const sarifRes = runBin(['--config', FAIL_CFG, '--format', 'sarif', '--no-fail']);
+    assert.equal(sarifRes.code, 0);
+    const sarif = JSON.parse(sarifRes.stdout);
+    assert.equal(sarif.version, '2.1.0');
+    assert.equal(sarif.runs[0].results.length, 1);
+    assert.equal(sarif.runs[0].results[0].ruleId, 'dtcg-wcag-contrast');
+    assert.match(sarif.runs[0].results[0].message.text, /#d70000/);
+    assert.match(
+      sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri,
+      /examples\/voaneves-brand\/tokens\.json$/
+    );
+
     const zeroCfg = runBin([TOKENS_FILE, '--mode', 'dark:vn.dark', '--no-color']);
     assert.equal(zeroCfg.code, 0);
     assert.match(zeroCfg.stdout, /Theme: light/);
     assert.match(zeroCfg.stdout, /Theme: dark/);
+  });
+
+  it('supports check and init subcommands and escapes HTML output safely', () => {
+    const passCheck = runBin(['check', '#0a0a0a', '#f4ead4', '--no-color']);
+    assert.equal(passCheck.code, 0);
+    assert.match(passCheck.stdout, /PASS/);
+
+    const failCheck = runBin(['check', '#f50000', '#f4ead4', '--format', 'json']);
+    assert.equal(failCheck.code, 1);
+    const failJson = JSON.parse(failCheck.stdout);
+    assert.equal(failJson.summary.failed, 1);
+    assert.equal(failJson.results[0].suggestion.hex, '#d70000');
+
+    const badCheck = runBin(['check', 'not-a-color', '#ffffff']);
+    assert.equal(badCheck.code, 2);
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dtcg-init-'));
+    try {
+      const cfgPath = path.join(tmpDir, 'dtcg-contrast.config.json');
+      const initRes = runBin(['init', TOKENS_FILE, '--output', cfgPath]);
+      assert.equal(initRes.code, 0);
+      assert.match(initRes.stdout, /2 theme\(s\)/);
+
+      const generated = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      assert.equal(generated.themes[1].extensionPath, 'vn.dark');
+      assert.ok(generated.pairs.length > 0);
+
+      const overwriteErr = runBin(['init', TOKENS_FILE, '--output', cfgPath]);
+      assert.equal(overwriteErr.code, 2);
+
+      const forceRes = runBin(['init', TOKENS_FILE, '--output', cfgPath, '--force']);
+      assert.equal(forceRes.code, 0);
+
+      const auditGenerated = runBin(['--config', cfgPath, '--no-color']);
+      assert.equal(auditGenerated.code, 0);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+
+    const html = formatHtml({
+      summary: { total: 1, passed: 1, failed: 0, themes: ['<script>alert(1)</script>'] },
+      results: [
+        {
+          theme: '<script>alert(1)</script>',
+          name: 'xss',
+          fg: '<img onerror=alert(1)>',
+          bg: 'surface',
+          fgHex: '#000000',
+          bgHex: '#ffffff',
+          fgSource: null,
+          bgSource: null,
+          fgDeprecated: true,
+          bgDeprecated: false,
+          level: 'AA',
+          requiredWcag: 4.5,
+          requiredApca: 0,
+          wcag: 21,
+          apca: 106,
+          wcagGrade: 'AAA',
+          passed: true,
+          suggestion: null,
+        },
+      ],
+    });
+    assert.ok(!html.includes('<script>alert(1)</script>'));
+    assert.ok(!html.includes('<img onerror=alert(1)>'));
+    assert.match(html, /pill-dep/);
   });
 
   it('exits 2 on invalid path or option', () => {

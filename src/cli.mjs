@@ -1,10 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { evaluatePairs } from './audit.mjs';
-import { WCAG_THRESHOLDS } from './contrast.mjs';
-import { formatHtml, formatJson, formatMarkdown, formatPretty } from './reporters.mjs';
-import { loadTokenSources } from './tokens.mjs';
+import { discoverPairs, evaluatePairs } from './audit.mjs';
+import { formatHex, parseColor } from './color.mjs';
+import {
+  WCAG_THRESHOLDS,
+  apcaContrast,
+  classifyWcag,
+  suggestAccessibleColor,
+  wcagContrast,
+} from './contrast.mjs';
+import {
+  formatHtml,
+  formatJson,
+  formatMarkdown,
+  formatPretty,
+  formatSarif,
+} from './reporters.mjs';
+import {
+  detectExtensionPaths,
+  extractColorTokens,
+  loadTokenSources,
+} from './tokens.mjs';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -14,14 +31,17 @@ WCAG 2.2 & APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 tokens.
 
 Usage:
   dtcg-contrast [paths...] [options]
+  dtcg-contrast check <fg> <bg> [options]
+  dtcg-contrast init <paths...> [-o dtcg-contrast.config.json] [--force]
 
 Options:
   -c, --config <file>     Config JSON file (auto-loads ./dtcg-contrast.config.json if present)
-  -f, --format <fmt>      Output format: pretty | markdown | json | html (default: pretty)
-  -o, --output <file>     Write formatted report to a file
+  -f, --format <fmt>      Output format: pretty | markdown | json | html | sarif (default: pretty)
+  -o, --output <file>     Write formatted report or config to a file
       --level <level>     Default WCAG threshold: AA | AA-large | AAA | AAA-large | UI (default: AA)
       --min-apca <num>    Minimum APCA |Lc| score (e.g. 60)
       --mode <name:path>  Add theme via DTCG $extensions path (repeatable, e.g. dark:vn.dark)
+      --force             Overwrite existing file on init
       --no-fail           Exit with code 0 even when pairs fail
       --no-color          Disable ANSI terminal colors
   -h, --help              Show this help message
@@ -37,6 +57,7 @@ function parseArgs(argv) {
     level: undefined,
     minApca: 0,
     modes: [],
+    force: false,
     noFail: false,
     color: !process.env.NO_COLOR,
     help: false,
@@ -59,6 +80,7 @@ function parseArgs(argv) {
     else if (arg === '--level') opts.level = next();
     else if (arg === '--min-apca') opts.minApca = Number(next());
     else if (arg === '--mode') opts.modes.push(next());
+    else if (arg === '--force') opts.force = true;
     else if (arg === '--no-fail') opts.noFail = true;
     else if (arg === '--no-color') opts.color = false;
     else if (arg.startsWith('-')) throw new Error(`Unknown option: ${arg}`);
@@ -66,6 +88,17 @@ function parseArgs(argv) {
   }
 
   return opts;
+}
+
+function validateCommonOpts(opts) {
+  if (opts.level !== undefined && !(opts.level in WCAG_THRESHOLDS)) {
+    throw new Error(
+      `Invalid --level "${opts.level}". Choose: ${Object.keys(WCAG_THRESHOLDS).join(', ')}.`
+    );
+  }
+  if (!Number.isFinite(opts.minApca) || opts.minApca < 0) {
+    throw new Error('Invalid --min-apca value.');
+  }
 }
 
 function resolveConfig(configPath) {
@@ -129,9 +162,170 @@ function formatReport(report, format, color) {
       return formatJson(report);
     case 'html':
       return formatHtml(report);
+    case 'sarif':
+      return formatSarif(report);
     default:
-      throw new Error(`Unsupported format "${format}". Choose: pretty, markdown, json, html.`);
+      throw new Error(
+        `Unsupported format "${format}". Choose: pretty, markdown, json, html, sarif.`
+      );
   }
+}
+
+function emitReport(report, opts) {
+  const rendered = formatReport(
+    report,
+    opts.format,
+    opts.color && Boolean(process.stdout.isTTY)
+  );
+  if (opts.output) {
+    const outPath = path.resolve(opts.output);
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, rendered, 'utf8');
+    process.stdout.write(
+      `Wrote ${opts.format} report to ${opts.output} (${report.summary.passed}/${report.summary.total} passed)\n`
+    );
+  } else {
+    process.stdout.write(rendered);
+  }
+  return report.summary.failed > 0 && !opts.noFail ? 1 : 0;
+}
+
+function runCheck(argv) {
+  const opts = parseArgs(argv);
+  if (opts.help) {
+    process.stdout.write(HELP_TEXT);
+    return 0;
+  }
+  validateCommonOpts(opts);
+  if (opts.paths.length !== 2) {
+    throw new Error('Expected two color arguments: dtcg-contrast check <fg> <bg>');
+  }
+
+  const [fgRaw, bgRaw] = opts.paths;
+  const fgColor = parseColor(fgRaw);
+  const bgColor = parseColor(bgRaw);
+  const pairLevel = opts.level ?? 'AA';
+  const requiredWcag = WCAG_THRESHOLDS[pairLevel];
+  const requiredApca = opts.minApca ?? 0;
+
+  const wcag = wcagContrast(fgColor, bgColor);
+  const apca = apcaContrast(fgColor, bgColor);
+  const passed = wcag >= requiredWcag && Math.abs(apca) >= requiredApca;
+  const suggestion = passed
+    ? null
+    : suggestAccessibleColor(fgColor, bgColor, {
+        minWcag: requiredWcag,
+        minApca: requiredApca,
+      });
+
+  const report = {
+    summary: {
+      total: 1,
+      passed: passed ? 1 : 0,
+      failed: passed ? 0 : 1,
+      themes: ['inline'],
+    },
+    results: [
+      {
+        theme: 'inline',
+        name: `${fgRaw} on ${bgRaw}`,
+        fg: fgRaw,
+        bg: bgRaw,
+        fgHex: formatHex(fgColor),
+        bgHex: formatHex(bgColor),
+        fgSource: null,
+        bgSource: null,
+        fgDeprecated: false,
+        bgDeprecated: false,
+        level: pairLevel,
+        requiredWcag,
+        requiredApca,
+        wcag: Number(wcag.toFixed(2)),
+        apca: Number(apca.toFixed(1)),
+        wcagGrade: classifyWcag(wcag),
+        passed,
+        suggestion: suggestion
+          ? {
+              hex: suggestion.hex,
+              oklch: suggestion.oklch,
+              wcag: Number(suggestion.wcag.toFixed(2)),
+              apca: Number(suggestion.apca.toFixed(1)),
+              deltaL: Number(suggestion.deltaL.toFixed(3)),
+            }
+          : null,
+      },
+    ],
+  };
+
+  return emitReport(report, opts);
+}
+
+function runInit(argv) {
+  const opts = parseArgs(argv);
+  if (opts.help) {
+    process.stdout.write(HELP_TEXT);
+    return 0;
+  }
+  validateCommonOpts(opts);
+  if (opts.paths.length === 0) {
+    throw new Error('Provide token path(s), e.g.: dtcg-contrast init ./tokens');
+  }
+
+  const outFile = opts.output || 'dtcg-contrast.config.json';
+  const outPath = path.resolve(outFile);
+  if (fs.existsSync(outPath) && !opts.force) {
+    throw new Error(`Config file already exists: ${outFile}. Pass --force to overwrite.`);
+  }
+
+  const tree = loadTokenSources(opts.paths);
+  const extPaths = detectExtensionPaths(tree);
+
+  const usedNames = new Set(['light']);
+  const themes =
+    extPaths.length > 0
+      ? [
+          { name: 'light' },
+          ...extPaths.map((ext) => {
+            const base = ext.split('.').pop() || ext;
+            let name = base;
+            let n = 2;
+            while (usedNames.has(name)) {
+              name = `${base}-${n}`;
+              n += 1;
+            }
+            usedNames.add(name);
+            return { name, extensionPath: ext };
+          }),
+        ]
+      : [{ name: 'default' }];
+
+  const baseTokens = extractColorTokens(tree);
+  const pairs = discoverPairs(baseTokens, {
+    level: opts.level,
+    minApca: opts.minApca || undefined,
+  });
+
+  const baseDir = path.dirname(outPath);
+  const tokens = opts.paths.map((p) => {
+    const rel = path.relative(baseDir, path.resolve(p)).split(path.sep).join('/');
+    if (!rel) return '.';
+    return rel.startsWith('.') ? rel : `./${rel}`;
+  });
+
+  const config = {
+    tokens,
+    themes,
+    ...(opts.level ? { level: opts.level } : {}),
+    ...(opts.minApca > 0 ? { minApca: opts.minApca } : {}),
+    pairs,
+  };
+
+  fs.mkdirSync(baseDir, { recursive: true });
+  fs.writeFileSync(outPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+  process.stdout.write(
+    `Created ${outFile} (${themes.length} theme(s), ${pairs.length} pair(s))\n`
+  );
+  return 0;
 }
 
 /**
@@ -141,6 +335,9 @@ function formatReport(report, format, color) {
  */
 export async function runCli(argv = process.argv.slice(2)) {
   try {
+    if (argv[0] === 'check') return runCheck(argv.slice(1));
+    if (argv[0] === 'init') return runInit(argv.slice(1));
+
     const opts = parseArgs(argv);
     if (opts.help) {
       process.stdout.write(HELP_TEXT);
@@ -150,14 +347,7 @@ export async function runCli(argv = process.argv.slice(2)) {
       process.stdout.write(`${pkg.version}\n`);
       return 0;
     }
-    if (opts.level !== undefined && !(opts.level in WCAG_THRESHOLDS)) {
-      throw new Error(
-        `Invalid --level "${opts.level}". Choose: ${Object.keys(WCAG_THRESHOLDS).join(', ')}.`
-      );
-    }
-    if (!Number.isFinite(opts.minApca) || opts.minApca < 0) {
-      throw new Error(`Invalid --min-apca value.`);
-    }
+    validateCommonOpts(opts);
 
     const defaultCfg = path.resolve('dtcg-contrast.config.json');
     const configPath =
@@ -185,25 +375,7 @@ export async function runCli(argv = process.argv.slice(2)) {
       minApca: cfg?.minApca ?? opts.minApca,
     });
 
-    const rendered = formatReport(
-      report,
-      opts.format,
-      opts.color && Boolean(process.stdout.isTTY)
-    );
-
-    if (opts.output) {
-      const outPath = path.resolve(opts.output);
-      fs.mkdirSync(path.dirname(outPath), { recursive: true });
-      fs.writeFileSync(outPath, rendered, 'utf8');
-      process.stdout.write(
-        `Wrote ${opts.format} report to ${opts.output} (${report.summary.passed}/${report.summary.total} passed)\n`
-      );
-    } else {
-      process.stdout.write(rendered);
-    }
-
-    if (report.summary.failed > 0 && !opts.noFail) return 1;
-    return 0;
+    return emitReport(report, opts);
   } catch (err) {
     process.stderr.write(`Error: ${err.message}\n`);
     return 2;

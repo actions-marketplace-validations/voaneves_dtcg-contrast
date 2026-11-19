@@ -150,3 +150,4 @@ export function formatPretty(report: AuditReport, options?: { color?: boolean })
 export function formatMarkdown(report: AuditReport): string;
 export function formatJson(report: AuditReport): string;
 export function formatHtml(report: AuditReport): string;
+export function formatSarif(report: AuditReport): string;
