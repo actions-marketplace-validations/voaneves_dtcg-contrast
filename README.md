@@ -2,9 +2,13 @@
 
 <p>🇺🇸 <strong>English</strong> · <a href="./README.pt-br.md">🇧🇷 Versão em Português (PT-BR)</a></p>
 
-# dtcg-contrast
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/hero-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/hero-light.svg" />
+  <img alt="dtcg-contrast — WCAG 2.2 & APCA contrast gate and OKLCH auto-fixer for W3C DTCG tokens." src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/hero-light.svg" width="100%" />
+</picture>
 
-**Zero-dependency WCAG 2.2 &amp; APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 design tokens.**
+<br />
 
 <p>
   <a href="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml"><img src="https://github.com/voaneves/dtcg-contrast/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
@@ -12,14 +16,27 @@
   <a href="https://www.npmjs.com/package/dtcg-contrast"><img src="https://img.shields.io/npm/dm/dtcg-contrast?style=flat-square&color=0A0A0A" alt="npm downloads per month" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-0A0A0A?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=22" />
-  <img src="https://img.shields.io/badge/dependencies-0-3fb950?style=flat-square" alt="Zero Dependencies" />
+  <img src="https://img.shields.io/badge/dependencies-0-5C5446?style=flat-square" alt="Zero Dependencies" />
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
-  <img src="https://img.shields.io/badge/standards-WCAG%202.2%20%2B%20APCA-0A0A0A?style=flat-square" alt="WCAG 2.2 and APCA" />
+</p>
+
+<p>
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#cli-options">CLI</a> ·
+  <a href="#github-action-sticky-pr-comments--sarif">GitHub Action</a> ·
+  <a href="#programmatic-js--ts-api">JS / TS API</a> ·
+  <a href="#commercial-support-audits--consulting">Consulting</a>
 </p>
 
 <img src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/demo.svg" alt="dtcg-contrast terminal output showing WCAG 2.2, APCA, and OKLCH auto-fix suggestions" width="820" />
 
 </div>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-light.svg" />
+  <img alt="" src="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-light.svg" width="100%" />
+</picture>
 
 ## Why `dtcg-contrast`?
 
@@ -188,7 +205,11 @@ if (report.summary.failed > 0) {
 
 Built alongside [`@voaneves/brand`](https://github.com/voaneves/brand) — Victor Neves' production W3C DTCG 2025.10 design system powering [`voaneves.com`](https://voaneves.com/en/) with zero runtime dependencies and automated WCAG 2.2 AA gates.
 
----
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-light.svg" />
+  <img alt="" src="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/rule-light.svg" width="100%" />
+</picture>
 
 ## Commercial Support, Audits & Consulting
 
@@ -198,8 +219,16 @@ Need a W3C DTCG design system, **WCAG 2.2 AA / EAA accessibility audit**, or aut
 - 💼 **LinkedIn:** [linkedin.com/in/voaneves](https://www.linkedin.com/in/voaneves/)
 - 💖 **Sponsor ongoing OSS work:** [github.com/sponsors/voaneves](https://github.com/sponsors/voaneves)
 
----
-
 ## License
 
 [MIT](./LICENSE) © 2026 [Victor Neves](https://github.com/voaneves)
+
+<br />
+
+<a href="https://voaneves.com/en/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/footer-dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/footer-light.svg" />
+    <img alt="VOANEVES. — Signal, not noise. Work together at voaneves.com" src="https://raw.githubusercontent.com/voaneves/voaneves/main/assets/brand/footer-light.svg" width="100%" />
+  </picture>
+</a>
