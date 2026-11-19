@@ -1,0 +1,55 @@
+{
+  "name": "dtcg-contrast",
+  "version": "1.0.0",
+  "description": "Zero-dependency WCAG 2.2 & APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 design tokens.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "dtcg-contrast": "./bin/dtcg-contrast.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.mjs"
+    }
+  },
+  "types": "./types/index.d.ts",
+  "files": [
+    "bin",
+    "src",
+    "types",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "example": "node ./bin/dtcg-contrast.mjs --config examples/voaneves-brand/dtcg-contrast.config.json"
+  },
+  "keywords": [
+    "dtcg",
+    "design-tokens",
+    "wcag",
+    "apca",
+    "contrast",
+    "accessibility",
+    "a11y",
+    "oklch",
+    "design-system",
+    "cli",
+    "github-action"
+  ],
+  "author": "Victor Neves <victorneves478@gmail.com> (https://voaneves.com/en/)",
+  "homepage": "https://github.com/voaneves/dtcg-contrast#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voaneves/dtcg-contrast.git"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/voaneves"
+  }
+}
