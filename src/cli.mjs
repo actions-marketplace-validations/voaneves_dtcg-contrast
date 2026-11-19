@@ -260,6 +260,15 @@ function runCheck(argv) {
   return emitReport(report, opts);
 }
 
+export function formatConfigTokenPath(baseDir, tokenPath, pathImpl = path) {
+  const absTarget = pathImpl.resolve(tokenPath);
+  const rel = pathImpl.relative(baseDir, absTarget);
+  if (!rel) return '.';
+  if (pathImpl.isAbsolute(rel)) return absTarget.split(pathImpl.sep).join('/');
+  const posixRel = rel.split(pathImpl.sep).join('/');
+  return posixRel.startsWith('.') ? posixRel : `./${posixRel}`;
+}
+
 function runInit(argv) {
   const opts = parseArgs(argv);
   if (opts.help) {
@@ -306,11 +315,7 @@ function runInit(argv) {
   });
 
   const baseDir = path.dirname(outPath);
-  const tokens = opts.paths.map((p) => {
-    const rel = path.relative(baseDir, path.resolve(p)).split(path.sep).join('/');
-    if (!rel) return '.';
-    return rel.startsWith('.') ? rel : `./${rel}`;
-  });
+  const tokens = opts.paths.map((p) => formatConfigTokenPath(baseDir, p));
 
   const config = {
     tokens,

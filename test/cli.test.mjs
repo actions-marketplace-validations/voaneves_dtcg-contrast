@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { formatHtml } from '../src/index.mjs';
+import { formatConfigTokenPath } from '../src/cli.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BIN = path.join(ROOT, 'bin', 'dtcg-contrast.mjs');
@@ -142,6 +143,23 @@ describe('dtcg-contrast CLI', () => {
 
       const auditGenerated = runBin(['--config', cfgPath, '--no-color']);
       assert.equal(auditGenerated.code, 0);
+
+      assert.equal(
+        formatConfigTokenPath(
+          'C:\\Users\\runner\\AppData\\Local\\Temp',
+          'D:\\a\\dtcg-contrast\\tokens.json',
+          path.win32
+        ),
+        'D:/a/dtcg-contrast/tokens.json'
+      );
+      assert.equal(
+        formatConfigTokenPath(
+          'D:\\a\\dtcg-contrast',
+          'D:\\a\\dtcg-contrast\\tokens\\color.json',
+          path.win32
+        ),
+        './tokens/color.json'
+      );
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
