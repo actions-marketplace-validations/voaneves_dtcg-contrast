@@ -44,7 +44,7 @@ npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json
 
 ```yaml
 - name: Gate de Contraste nos Design Tokens
-  uses: voaneves/dtcg-contrast@v1
+  uses: voaneves/dtcg-contrast@v0.1.0
   with:
     config: dtcg-contrast.config.json
     html-report: contrast-matrix.html

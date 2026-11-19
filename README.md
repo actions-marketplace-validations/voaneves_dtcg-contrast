@@ -89,7 +89,7 @@ Gate pull requests in 8 lines with an automatic Markdown report in `$GITHUB_STEP
 
 ```yaml
 - name: Design Token Contrast Gate
-  uses: voaneves/dtcg-contrast@v1
+  uses: voaneves/dtcg-contrast@v0.1.0
   with:
     config: dtcg-contrast.config.json
     html-report: contrast-matrix.html

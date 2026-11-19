@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0] - 2026-11-19
+## [0.1.0] - 2026-11-19
 
 ### Added
 - Zero-dependency W3C DTCG 2025.10 token loader with group `$type` inheritance, multi-hop `{alias}` resolution, and circular-reference detection.

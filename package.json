@@ -1,6 +1,6 @@
 {
   "name": "dtcg-contrast",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Zero-dependency WCAG 2.2 & APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 design tokens.",
   "type": "module",
   "license": "MIT",
