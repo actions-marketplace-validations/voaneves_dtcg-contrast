@@ -1,0 +1,177 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {
+  discoverPairs,
+  evaluatePairs,
+  extractColorTokens,
+  loadTokenSources,
+} from '../src/index.mjs';
+
+function makeTempDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'dtcg-contrast-test-'));
+}
+
+describe('DTCG token loader & resolver', () => {
+  it('loads directories recursively, inherits group $type, resolves multi-hop aliases, and switches themes', () => {
+    const dir = makeTempDir();
+    try {
+      fs.mkdirSync(path.join(dir, 'ref'));
+      fs.mkdirSync(path.join(dir, 'sys'));
+
+      fs.writeFileSync(
+        path.join(dir, 'ref', 'palette.json'),
+        JSON.stringify({
+          ref: {
+            color: {
+              $type: 'color',
+              ink: { $value: { colorSpace: 'srgb', components: [0.0392, 0.0392, 0.0392], hex: '#0a0a0a' } },
+              cream: { $value: { colorSpace: 'srgb', components: [0.9569, 0.9176, 0.8314], hex: '#f4ead4' } },
+              red: { $value: { colorSpace: 'srgb', components: [0.9608, 0, 0], hex: '#f50000' } },
+              redDark: { $value: { colorSpace: 'srgb', components: [0.7216, 0, 0], hex: '#b80000' } },
+            },
+          },
+        })
+      );
+
+      fs.writeFileSync(
+        path.join(dir, 'sys', 'semantic.json'),
+        JSON.stringify({
+          color: {
+            $type: 'color',
+            surface: {
+              $value: '{ref.color.cream}',
+              $extensions: { vn: { dark: '{ref.color.ink}' } },
+            },
+            text: {
+              $value: '{ref.color.ink}',
+              $extensions: { vn: { dark: '{ref.color.cream}' } },
+            },
+            accent: {
+              $value: '{color.accentBase}',
+            },
+            accentBase: {
+              $value: '{ref.color.red}',
+              $extensions: { vn: { dark: '{ref.color.redDark}' } },
+            },
+          },
+        })
+      );
+
+      const tree = loadTokenSources(dir);
+      const light = extractColorTokens(tree);
+      assert.equal(light.get('color.surface').hex, '#f4ead4');
+      assert.equal(light.get('color.text').hex, '#0a0a0a');
+      assert.equal(light.get('color.accent').hex, '#f50000');
+      assert.deepEqual(light.get('color.accent').resolvedFrom, [
+        'color.accentBase',
+        'ref.color.red',
+      ]);
+
+      const dark = extractColorTokens(tree, { extensionPath: 'vn.dark' });
+      assert.equal(dark.get('color.surface').hex, '#0a0a0a');
+      assert.equal(dark.get('color.text').hex, '#f4ead4');
+      assert.equal(dark.get('color.accent').hex, '#b80000');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('supports overlay file theme overrides', () => {
+    const dir = makeTempDir();
+    try {
+      const base = path.join(dir, 'base.json');
+      const overlay = path.join(dir, 'dark.json');
+      fs.writeFileSync(
+        base,
+        JSON.stringify({
+          color: {
+            $type: 'color',
+            surface: { $value: '#ffffff' },
+            text: { $value: '#111111' },
+          },
+        })
+      );
+      fs.writeFileSync(
+        overlay,
+        JSON.stringify({
+          color: {
+            surface: { $value: '#111111' },
+            text: { $value: '#f5f5f5' },
+          },
+        })
+      );
+
+      const tree = loadTokenSources(base);
+      const dark = extractColorTokens(tree, { overlayPaths: [overlay] });
+      assert.equal(dark.get('color.surface').hex, '#111111');
+      assert.equal(dark.get('color.text').hex, '#f5f5f5');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('detects circular and missing aliases clearly', () => {
+    assert.throws(
+      () =>
+        extractColorTokens({
+          a: { $type: 'color', $value: '{b}' },
+          b: { $type: 'color', $value: '{a}' },
+        }),
+      /Circular token alias/
+    );
+
+    assert.throws(
+      () =>
+        extractColorTokens({
+          a: { $type: 'color', $value: '{does.not.exist}' },
+        }),
+      /Missing alias target/
+    );
+  });
+});
+
+describe('discoverPairs & evaluatePairs', () => {
+  it('auto-discovers semantic pairs and evaluates multiple themes with OKLCH suggestions', () => {
+    const tree = {
+      ref: {
+        $type: 'color',
+        cream: { $value: '#f4ead4' },
+        ink: { $value: '#0a0a0a' },
+        signal: { $value: '#f50000' },
+      },
+      color: {
+        $type: 'color',
+        surface: { $value: '{ref.cream}', $extensions: { mode: { dark: '{ref.ink}' } } },
+        'surface-inverse': { $value: '{ref.ink}' },
+        text: { $value: '{ref.ink}', $extensions: { mode: { dark: '{ref.cream}' } } },
+        'text-on-inverse': { $value: '{ref.cream}' },
+        'signal-ink': { $value: '{ref.signal}' },
+      },
+    };
+
+    const lightMap = extractColorTokens(tree);
+    const pairs = discoverPairs(lightMap);
+    assert.ok(pairs.some((p) => p.fg === 'color.text' && p.bg === 'color.surface'));
+    assert.ok(pairs.some((p) => p.fg === 'color.text-on-inverse' && p.bg === 'color.surface-inverse'));
+    assert.ok(!pairs.some((p) => p.fg === 'color.text-on-inverse' && p.bg === 'color.surface'));
+
+    const report = evaluatePairs({
+      tokenTree: tree,
+      themes: [{ name: 'light' }, { name: 'dark', extensionPath: 'mode.dark' }],
+      pairs: [
+        { fg: 'color.text', bg: 'color.surface', level: 'AA' },
+        { fg: 'color.signal-ink', bg: 'color.surface', level: 'AA', themes: ['light'] },
+      ],
+    });
+
+    assert.equal(report.summary.total, 3);
+    assert.equal(report.summary.passed, 2);
+    assert.equal(report.summary.failed, 1);
+    const fail = report.results.find((r) => !r.passed);
+    assert.ok(fail.suggestion !== null);
+    assert.ok(fail.suggestion.wcag >= 4.5);
+  });
+});
