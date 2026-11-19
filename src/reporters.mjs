@@ -185,7 +185,8 @@ export function formatSarif(report) {
       const fixText = r.suggestion
         ? ` Suggested OKLCH fix: ${r.suggestion.hex} (${r.suggestion.oklch}) -> ${r.suggestion.wcag.toFixed(2)}:1.`
         : '';
-      const uri = r.fgSource || r.bgSource || 'tokens.json';
+      const loc = r.fgLocation;
+      const uri = loc?.uri || r.fgSource || r.bgSource || 'tokens.json';
 
       return {
         ruleId,
@@ -197,6 +198,14 @@ export function formatSarif(report) {
           {
             physicalLocation: {
               artifactLocation: { uri },
+              ...(loc?.startLine
+                ? {
+                    region: {
+                      startLine: loc.startLine,
+                      startColumn: loc.startColumn,
+                    },
+                  }
+                : {}),
             },
           },
         ],

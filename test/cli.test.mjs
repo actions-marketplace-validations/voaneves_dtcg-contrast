@@ -103,6 +103,8 @@ describe('dtcg-contrast CLI', () => {
       sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri,
       /examples\/voaneves-brand\/tokens\.json$/
     );
+    assert.ok(sarif.runs[0].results[0].locations[0].physicalLocation.region.startLine > 1);
+    assert.ok(sarif.runs[0].results[0].locations[0].physicalLocation.region.startColumn >= 1);
 
     const zeroCfg = runBin([TOKENS_FILE, '--mode', 'dark:vn.dark', '--no-color']);
     assert.equal(zeroCfg.code, 0);

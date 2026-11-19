@@ -73,23 +73,168 @@ function collectJsonFiles(entryPath, out = []) {
   return out;
 }
 
-function recordFileSources(obj, prefix, relPath, sourceMap) {
-  if (
-    prefix &&
-    isPlainObject(obj.$root) &&
-    Object.prototype.hasOwnProperty.call(obj.$root, '$value')
-  ) {
-    sourceMap.set(prefix, relPath);
-  }
-  for (const [key, child] of Object.entries(obj)) {
-    if (key.startsWith('$') || !isPlainObject(child)) continue;
-    const tokenPath = prefix ? `${prefix}.${key}` : key;
-    if (Object.prototype.hasOwnProperty.call(child, '$value')) {
-      sourceMap.set(tokenPath, relPath);
+function indexTokenLocations(rawText, uri, absPath, outMap) {
+  let i = 0;
+  let line = 1;
+  let col = 1;
+  const n = rawText.length;
+
+  const bump = () => {
+    if (rawText[i] === '\n') {
+      line += 1;
+      col = 1;
     } else {
-      recordFileSources(child, tokenPath, relPath, sourceMap);
+      col += 1;
     }
-  }
+    i += 1;
+  };
+
+  const skipWs = () => {
+    while (
+      i < n &&
+      (rawText[i] === ' ' || rawText[i] === '\t' || rawText[i] === '\r' || rawText[i] === '\n')
+    ) {
+      bump();
+    }
+  };
+
+  const readString = () => {
+    const startLine = line;
+    const startColumn = col;
+    bump();
+    let str = '';
+    while (i < n && rawText[i] !== '"') {
+      if (rawText[i] === '\\') {
+        bump();
+        if (i < n) {
+          const esc = rawText[i];
+          if (esc === 'n') str += '\n';
+          else if (esc === 't') str += '\t';
+          else if (esc === 'r') str += '\r';
+          else if (esc === 'u') {
+            str += String.fromCharCode(parseInt(rawText.slice(i + 1, i + 5), 16));
+            for (let k = 0; k < 4 && i < n; k += 1) bump();
+          } else {
+            str += esc;
+          }
+          bump();
+        }
+      } else {
+        str += rawText[i];
+        bump();
+      }
+    }
+    if (i < n) bump();
+    return { value: str, line: startLine, col: startColumn };
+  };
+
+  const skipValue = () => {
+    skipWs();
+    if (i >= n) return;
+    const ch = rawText[i];
+    if (ch === '"') {
+      readString();
+    } else if (ch === '{') {
+      bump();
+      skipWs();
+      if (rawText[i] === '}') {
+        bump();
+        return;
+      }
+      while (i < n) {
+        skipWs();
+        readString();
+        skipWs();
+        if (rawText[i] === ':') bump();
+        skipValue();
+        skipWs();
+        if (rawText[i] === ',') {
+          bump();
+          continue;
+        }
+        if (rawText[i] === '}') {
+          bump();
+          break;
+        }
+        break;
+      }
+    } else if (ch === '[') {
+      bump();
+      skipWs();
+      if (rawText[i] === ']') {
+        bump();
+        return;
+      }
+      while (i < n) {
+        skipValue();
+        skipWs();
+        if (rawText[i] === ',') {
+          bump();
+          continue;
+        }
+        if (rawText[i] === ']') {
+          bump();
+          break;
+        }
+        break;
+      }
+    } else {
+      while (i < n && !',]} \t\r\n'.includes(rawText[i])) bump();
+    }
+  };
+
+  const scanObject = (pathStack, objKeyLoc) => {
+    skipWs();
+    if (rawText[i] !== '{') {
+      skipValue();
+      return;
+    }
+    bump();
+    skipWs();
+    if (rawText[i] === '}') {
+      bump();
+      return;
+    }
+    while (i < n) {
+      skipWs();
+      const key = readString();
+      skipWs();
+      if (rawText[i] === ':') bump();
+      skipWs();
+      if (key.value === '$value') {
+        const isRoot = pathStack[pathStack.length - 1] === '$root';
+        const tokenPath = isRoot ? pathStack.slice(0, -1).join('.') : pathStack.join('.');
+        if (tokenPath) {
+          const loc = objKeyLoc ?? key;
+          outMap.set(tokenPath, {
+            uri,
+            absPath,
+            startLine: loc.line,
+            startColumn: loc.col,
+          });
+        }
+        skipValue();
+      } else if (key.value === '$root') {
+        scanObject([...pathStack, '$root'], key);
+      } else if (key.value.startsWith('$')) {
+        skipValue();
+      } else {
+        scanObject([...pathStack, key.value], key);
+      }
+      skipWs();
+      if (rawText[i] === ',') {
+        bump();
+        continue;
+      }
+      if (rawText[i] === '}') {
+        bump();
+        break;
+      }
+      break;
+    }
+  };
+
+  scanObject([], null);
 }
 
 function toPosixRelative(file) {
@@ -131,7 +276,7 @@ export function loadTokenSources(paths) {
     if (!isPlainObject(parsed)) {
       throw new Error(`Token file "${file}" must export a JSON object.`);
     }
-    recordFileSources(parsed, '', toPosixRelative(file), sourceMap);
+    indexTokenLocations(raw, toPosixRelative(file), file, sourceMap);
     merged = deepMerge(merged, parsed);
   }
 
@@ -329,6 +474,7 @@ export function extractColorTokens(tree, options = {}) {
       throw new Error(`Failed to parse color token "${name}": ${err.message}`);
     }
 
+    const loc = sourceMap.get(name) ?? null;
     colors.set(name, {
       name,
       raw,
@@ -337,7 +483,8 @@ export function extractColorTokens(tree, options = {}) {
       color,
       description: node.description,
       deprecated: node.deprecated,
-      sourceFile: sourceMap.get(name) ?? null,
+      sourceFile: loc?.uri ?? null,
+      sourceLocation: loc,
     });
   }
 

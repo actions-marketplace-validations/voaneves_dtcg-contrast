@@ -85,6 +85,69 @@ export function discoverPairs(tokenMap, options = {}) {
 }
 
 /**
+ * Convert a token path glob (`*` within segment, `**` across segments) into a RegExp.
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+export function globToRegExp(pattern) {
+  const DOUBLE_STAR = '\u0000';
+  const escaped = pattern
+    .replaceAll('**', DOUBLE_STAR)
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replaceAll('*', '[^.]*')
+    .replaceAll(DOUBLE_STAR, '.*');
+  return new RegExp(`^${escaped}$`);
+}
+
+/**
+ * Expand glob wildcards (`fg`/`bg` containing `*`) and apply `exclude` patterns against a token map.
+ * Explicit non-glob pairs are preserved as-is so missing explicit tokens fail loudly.
+ *
+ * @param {Array<any>} pairs
+ * @param {Map<string, any>} tokenMap
+ * @returns {Array<any>}
+ */
+export function expandPairRules(pairs, tokenMap) {
+  const names = [...tokenMap.keys()];
+  const expanded = [];
+
+  for (const rule of pairs) {
+    if (rule.ignore) continue;
+    const hasFgGlob = typeof rule.fg === 'string' && rule.fg.includes('*');
+    const hasBgGlob = typeof rule.bg === 'string' && rule.bg.includes('*');
+
+    if (!hasFgGlob && !hasBgGlob) {
+      expanded.push(rule);
+      continue;
+    }
+
+    const excludes = Array.isArray(rule.exclude)
+      ? rule.exclude.map((pat) => globToRegExp(pat))
+      : [];
+    const isExcluded = (name) => excludes.some((re) => re.test(name));
+
+    const fgRe = hasFgGlob ? globToRegExp(rule.fg) : null;
+    const bgRe = hasBgGlob ? globToRegExp(rule.bg) : null;
+
+    const fgList = fgRe
+      ? names.filter((n) => fgRe.test(n) && !isExcluded(n))
+      : [rule.fg];
+    const bgList = bgRe
+      ? names.filter((n) => bgRe.test(n) && !isExcluded(n))
+      : [rule.bg];
+
+    for (const fg of fgList) {
+      for (const bg of bgList) {
+        if (fg === bg) continue;
+        expanded.push({ ...rule, fg, bg, name: undefined, exclude: undefined });
+      }
+    }
+  }
+
+  return expanded;
+}
+
+/**
  * Evaluate foreground/background pairs across one or more themes.
  * Computes WCAG 2.2 ratio, APCA Lc, pass/fail status, and OKLCH auto-fix suggestions.
  *
@@ -133,13 +196,14 @@ export function evaluatePairs({
     );
   }
 
+  const baseMap = themeMaps.get(resolvedThemes[0].name);
   const activePairs =
     !pairs || pairs.length === 0 || auto
-      ? discoverPairs(themeMaps.get(resolvedThemes[0].name), {
+      ? discoverPairs(baseMap, {
           level,
           minApca: globalMinApca || undefined,
         })
-      : pairs;
+      : expandPairRules(pairs, baseMap);
 
   const results = [];
 
@@ -189,6 +253,14 @@ export function evaluatePairs({
         bgHex: bgToken.hex,
         fgSource: fgToken.sourceFile ?? null,
         bgSource: bgToken.sourceFile ?? null,
+        fgLocation: fgToken.sourceLocation
+          ? {
+              uri: fgToken.sourceLocation.uri,
+              startLine: fgToken.sourceLocation.startLine,
+              startColumn: fgToken.sourceLocation.startColumn,
+            }
+          : null,
+        fgResolvedFrom: fgToken.resolvedFrom ?? [],
         fgDeprecated: Boolean(fgToken.deprecated),
         bgDeprecated: Boolean(bgToken.deprecated),
         level: pairLevel,

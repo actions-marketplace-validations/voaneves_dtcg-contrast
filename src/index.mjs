@@ -31,6 +31,8 @@ export {
 export {
   discoverPairs,
   evaluatePairs,
+  expandPairRules,
+  globToRegExp,
 } from './audit.mjs';
 
 export {

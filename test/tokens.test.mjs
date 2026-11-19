@@ -7,6 +7,7 @@ import {
   detectExtensionPaths,
   discoverPairs,
   evaluatePairs,
+  expandPairRules,
   extractColorTokens,
   loadTokenSources,
 } from '../src/index.mjs';
@@ -216,5 +217,64 @@ describe('discoverPairs & evaluatePairs', () => {
     const fail = report.results.find((r) => !r.passed);
     assert.ok(fail.suggestion !== null);
     assert.ok(fail.suggestion.wcag >= 4.5);
+  });
+
+  it('records exact 1-based line/column positions and expands glob pairs with exclude', () => {
+    const dir = makeTempDir();
+    try {
+      const file = path.join(dir, 'tokens.json');
+      fs.writeFileSync(
+        file,
+        [
+          '{',
+          '  "color": {',
+          '    "$type": "color",',
+          '    "brand": {',
+          '      "$root": { "$value": "#0a0a0a" }',
+          '    },',
+          '    "text": { "$value": "#0a0a0a" },',
+          '    "text-muted": { "$value": "#5c5446" },',
+          '    "surface": { "$value": "#f4ead4" },',
+          '    "surface-soft": { "$value": "#efe4c5" },',
+          '    "surface-inverse": { "$value": "#0a0a0a" }',
+          '  }',
+          '}',
+        ].join('\n')
+      );
+
+      const tree = loadTokenSources(file);
+      const map = extractColorTokens(tree);
+      assert.deepEqual(
+        {
+          line: map.get('color.brand').sourceLocation.startLine,
+          col: map.get('color.brand').sourceLocation.startColumn,
+        },
+        { line: 5, col: 7 }
+      );
+      assert.deepEqual(
+        {
+          line: map.get('color.text').sourceLocation.startLine,
+          col: map.get('color.text').sourceLocation.startColumn,
+        },
+        { line: 7, col: 5 }
+      );
+
+      const expanded = expandPairRules(
+        [{ fg: 'color.text*', bg: 'color.surface*', exclude: ['color.surface-inverse'], level: 'AA' }],
+        map
+      );
+      assert.equal(expanded.length, 4);
+      assert.ok(expanded.every((p) => p.bg !== 'color.surface-inverse'));
+
+      const report = evaluatePairs({
+        tokenTree: tree,
+        pairs: [{ fg: 'color.text*', bg: 'color.surface*', exclude: ['color.surface-inverse'], level: 'AA' }],
+      });
+      assert.equal(report.summary.total, 4);
+      assert.equal(report.summary.failed, 0);
+      assert.equal(report.results[0].fgLocation.startLine, 7);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

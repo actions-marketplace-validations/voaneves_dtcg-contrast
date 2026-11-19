@@ -23,6 +23,13 @@ export interface DtcgColorObject {
 
 export type ColorInput = string | DtcgColorObject | SrgbColor;
 
+export interface SourceLocation {
+  uri: string;
+  absPath?: string;
+  startLine: number;
+  startColumn: number;
+}
+
 export interface ResolvedToken {
   name: string;
   raw: unknown;
@@ -32,6 +39,7 @@ export interface ResolvedToken {
   description: string;
   deprecated: boolean;
   sourceFile: string | null;
+  sourceLocation: SourceLocation | null;
 }
 
 export interface ThemeConfig {
@@ -48,6 +56,7 @@ export interface PairConfig {
   minWcag?: number;
   minApca?: number;
   themes?: string[];
+  exclude?: string[];
   name?: string;
   ignore?: boolean;
 }
@@ -70,6 +79,8 @@ export interface PairResult {
   bgHex: string;
   fgSource: string | null;
   bgSource: string | null;
+  fgLocation: { uri: string; startLine: number; startColumn: number } | null;
+  fgResolvedFrom: string[];
   fgDeprecated: boolean;
   bgDeprecated: boolean;
   level: string;
@@ -131,6 +142,11 @@ export function extractColorTokens(
   }
 ): Map<string, ResolvedToken>;
 
+export function globToRegExp(pattern: string): RegExp;
+export function expandPairRules(
+  pairs: PairConfig[],
+  tokenMap: Map<string, ResolvedToken>
+): PairConfig[];
 export function discoverPairs(
   tokenMap: Map<string, ResolvedToken>,
   options?: { level?: string; minApca?: number }
