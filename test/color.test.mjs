@@ -44,6 +44,12 @@ describe('parseColor', () => {
 
     const ok = parseColor('oklch(62.8% 0.2577 29.2deg)');
     assert.ok(ok.r > 0.9 && ok.g < 0.2);
+
+    const csrgb = parseColor('color(srgb 0.9608 0 none / 50%)');
+    assert.equal(formatHex(csrgb), '#f5000080');
+
+    const cp3 = parseColor('color(display-p3 1 0 0)');
+    assert.equal(cp3.r, 1);
   });
 
   it('falls back to hex when DTCG components are missing and throws on invalid input', () => {

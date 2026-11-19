@@ -283,6 +283,22 @@ function parseCssFunction(str) {
     return oklchToSrgbGamutMapped({ l, c, h, a });
   }
 
+  if (fn === 'color') {
+    if (parts.length !== 4) {
+      throw new Error(`Invalid color() arguments: "${str}"`);
+    }
+    const space = parts[0].toLowerCase();
+    const nums = parts.slice(1, 4).map((tok) => clamp01(parseCssNumber(tok, { percentBase: 1 })));
+    const a = alphaPart !== undefined ? clamp01(parseCssNumber(alphaPart, { percentBase: 1 })) : 1;
+    if (space === 'srgb') {
+      return { r: nums[0], g: nums[1], b: nums[2], a };
+    }
+    if (space === 'display-p3') {
+      return displayP3ToSrgb(nums, a);
+    }
+    throw new Error(`Unsupported color() space "${space}": "${str}"`);
+  }
+
   throw new Error(`Unsupported color function: "${str}"`);
 }
 

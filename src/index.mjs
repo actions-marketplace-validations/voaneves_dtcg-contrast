@@ -23,6 +23,7 @@ export {
 
 export {
   deepMerge,
+  detectExtensionPaths,
   extractColorTokens,
   loadTokenSources,
 } from './tokens.mjs';

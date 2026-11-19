@@ -30,6 +30,8 @@ export interface ResolvedToken {
   resolvedFrom: string[];
   color: SrgbColor;
   description: string;
+  deprecated: boolean;
+  sourceFile: string | null;
 }
 
 export interface ThemeConfig {
@@ -66,6 +68,10 @@ export interface PairResult {
   bg: string;
   fgHex: string;
   bgHex: string;
+  fgSource: string | null;
+  bgSource: string | null;
+  fgDeprecated: boolean;
+  bgDeprecated: boolean;
   level: string;
   requiredWcag: number;
   requiredApca: number;
@@ -115,6 +121,7 @@ export function deepMerge(
   source: Record<string, unknown>
 ): Record<string, unknown>;
 export function loadTokenSources(paths: string | string[]): Record<string, unknown>;
+export function detectExtensionPaths(tree: Record<string, unknown>): string[];
 export function extractColorTokens(
   tree: Record<string, unknown>,
   options?: {

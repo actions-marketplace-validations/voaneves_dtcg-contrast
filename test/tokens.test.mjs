@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  detectExtensionPaths,
   discoverPairs,
   evaluatePairs,
   extractColorTokens,
@@ -130,6 +131,48 @@ describe('DTCG token loader & resolver', () => {
         }),
       /Missing alias target/
     );
+  });
+
+  it('supports DTCG $root tokens, dotted $extensions keys, $deprecated, source tracking, and detectExtensionPaths', () => {
+    const dir = makeTempDir();
+    try {
+      const file = path.join(dir, 'design.tokens.json');
+      fs.writeFileSync(
+        file,
+        JSON.stringify({
+          color: {
+            $type: 'color',
+            brand: {
+              $root: {
+                $value: '#b80000',
+                $deprecated: true,
+                $extensions: { 'com.figma': { modes: { dark: '#ff5a5a' } } },
+              },
+              subtle: { $value: '{color.brand.$root}' },
+            },
+            surface: {
+              $value: '#f4ead4',
+              $extensions: { 'com.figma': { modes: { dark: '#0a0a0a' } } },
+            },
+          },
+        })
+      );
+
+      const tree = loadTokenSources(file);
+      assert.deepEqual(detectExtensionPaths(tree), ['com.figma.modes.dark']);
+
+      const light = extractColorTokens(tree);
+      assert.equal(light.get('color.brand').hex, '#b80000');
+      assert.equal(light.get('color.brand').deprecated, true);
+      assert.equal(light.get('color.brand.subtle').hex, '#b80000');
+      assert.match(light.get('color.brand').sourceFile, /design\.tokens\.json$/);
+
+      const dark = extractColorTokens(tree, { extensionPath: 'com.figma.modes.dark' });
+      assert.equal(dark.get('color.brand').hex, '#ff5a5a');
+      assert.equal(dark.get('color.surface').hex, '#0a0a0a');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
