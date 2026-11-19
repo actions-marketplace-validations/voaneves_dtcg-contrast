@@ -1,0 +1,13 @@
+{
+  "tokens": ["./tokens.json"],
+  "themes": [
+    { "name": "light" },
+    { "name": "dark", "extensionPath": "vn.dark" }
+  ],
+  "pairs": [
+    { "fg": "color.text", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.signal", "bg": "color.surface", "level": "AA", "themes": ["light"] },
+    { "fg": "color.signal-ink", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.text-on-signal", "bg": "color.surface-signal", "level": "AA" }
+  ]
+}

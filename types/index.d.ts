@@ -138,3 +138,8 @@ export function evaluatePairs(params: {
   level?: WcagLevel | string;
   minApca?: number;
 }): AuditReport;
+
+export function formatPretty(report: AuditReport, options?: { color?: boolean }): string;
+export function formatMarkdown(report: AuditReport): string;
+export function formatJson(report: AuditReport): string;
+export function formatHtml(report: AuditReport): string;

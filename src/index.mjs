@@ -31,3 +31,10 @@ export {
   discoverPairs,
   evaluatePairs,
 } from './audit.mjs';
+
+export {
+  formatHtml,
+  formatJson,
+  formatMarkdown,
+  formatPretty,
+} from './reporters.mjs';

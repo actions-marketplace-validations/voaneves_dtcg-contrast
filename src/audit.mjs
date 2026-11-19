@@ -8,6 +8,7 @@ import {
 import { extractColorTokens } from './tokens.mjs';
 
 const REF_PREFIX_RE = /^(ref|primitive|primitives|palette|base)\./i;
+const GLOBAL_BG_PREFIX_RE = /^(color|sys|semantic|theme|surface|bg|background)\b/i;
 const BG_NAME_RE = /(^|[.-])(surface|bg|background|canvas|paper)([.-]|$)/i;
 const FG_NAME_RE = /(^|[.-])(text|fg|foreground|label|icon|link|border|line-strong|focus|signal-ink)([.-]|$)/i;
 const FALLBACK_FG_RE = /(^|[.-])ink([.-]|$)/i;
@@ -29,7 +30,9 @@ export function discoverPairs(tokenMap, options = {}) {
   const semanticNames = allNames.filter((n) => !REF_PREFIX_RE.test(n));
   const pool = semanticNames.length > 0 ? semanticNames : allNames;
 
-  const bgs = pool.filter((n) => BG_NAME_RE.test(n) && !ON_TAG_RE.test(n));
+  const bgs = pool.filter(
+    (n) => BG_NAME_RE.test(n) && !ON_TAG_RE.test(n) && !/\.dot\./i.test(n)
+  );
   let fgs = pool.filter((n) => FG_NAME_RE.test(n) && !BG_NAME_RE.test(n));
   if (fgs.length === 0) {
     fgs = pool.filter((n) => FALLBACK_FG_RE.test(n) && !BG_NAME_RE.test(n));
@@ -41,11 +44,24 @@ export function discoverPairs(tokenMap, options = {}) {
   for (const fg of fgs) {
     const onMatch = fg.match(ON_TAG_RE);
     const fgTargetTag = onMatch ? onMatch[1].toLowerCase() : null;
+    const fgRoot = fg.split('.')[0];
+    const isComponentFg = fg.includes('.') && !GLOBAL_BG_PREFIX_RE.test(fg);
 
     for (const bg of bgs) {
+      const bgRoot = bg.split('.')[0];
+      const isComponentBg = bg.includes('.') && !GLOBAL_BG_PREFIX_RE.test(bg);
+
+      if (isComponentBg && fgRoot !== bgRoot) continue;
+      const fgVariantPrefix = `${fg.split('.').slice(0, 2).join('.')}.`;
+      const fgHasOwnBg = isComponentFg && bgs.some((b) => b.startsWith(fgVariantPrefix));
+      if (fgHasOwnBg && !bg.startsWith(fgVariantPrefix)) continue;
+      if (isComponentFg && isComponentBg && !bg.startsWith(fgVariantPrefix)) {
+        continue;
+      }
+
       if (fgTargetTag) {
         if (!bg.toLowerCase().includes(fgTargetTag)) continue;
-      } else if (hasOnScopedFgs && SPECIAL_BG_RE.test(bg)) {
+      } else if (hasOnScopedFgs && SPECIAL_BG_RE.test(bg) && !isComponentBg) {
         continue;
       }
 
@@ -79,7 +95,7 @@ export function evaluatePairs({
   themes,
   pairs,
   auto = false,
-  level = 'AA',
+  level,
   minApca: globalMinApca = 0,
 }) {
   const resolvedThemes =
@@ -111,7 +127,7 @@ export function evaluatePairs({
   const activePairs =
     !pairs || pairs.length === 0 || auto
       ? discoverPairs(themeMaps.get(resolvedThemes[0].name), {
-          level: auto && level ? level : undefined,
+          level,
           minApca: globalMinApca || undefined,
         })
       : pairs;

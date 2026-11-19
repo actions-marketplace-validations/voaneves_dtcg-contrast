@@ -1,0 +1,17 @@
+{
+  "tokens": ["./tokens.json"],
+  "themes": [
+    { "name": "light" },
+    { "name": "dark", "extensionPath": "vn.dark" }
+  ],
+  "pairs": [
+    { "fg": "color.text", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.text-muted", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.text", "bg": "color.surface-soft", "level": "AA" },
+    { "fg": "color.text", "bg": "color.surface-raised", "level": "AA" },
+    { "fg": "color.signal-ink", "bg": "color.surface", "level": "AA" },
+    { "fg": "color.signal-ink", "bg": "color.surface-soft", "level": "AA" },
+    { "fg": "color.text-on-signal", "bg": "color.surface-signal", "level": "AA" },
+    { "fg": "color.line-strong", "bg": "color.surface", "level": "UI" }
+  ]
+}
