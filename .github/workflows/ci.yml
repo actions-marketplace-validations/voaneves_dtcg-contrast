@@ -27,6 +27,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test
       - run: npm run example
+      - run: node ./bin/dtcg-contrast.mjs check "#0a0a0a" "#f4ead4" --no-color
 
   action-dogfood:
     runs-on: ubuntu-latest
@@ -41,9 +42,11 @@ jobs:
         with:
           config: examples/voaneves-brand/dtcg-contrast.config.json
           html-report: contrast-matrix.html
+          sarif-report: contrast.sarif
       - name: Verify action outputs
         run: |
           test "${{ steps.contrast.outputs.total }}" = "16"
           test "${{ steps.contrast.outputs.passed }}" = "16"
           test "${{ steps.contrast.outputs.failed }}" = "0"
           test -f contrast-matrix.html
+          test -f contrast.sarif

@@ -7,6 +7,7 @@
 **Zero-dependency WCAG 2.2 &amp; APCA contrast gate and OKLCH auto-fixer for W3C DTCG 2025.10 design tokens.**
 
 <p>
+  <a href="./CHANGELOG.md"><img src="https://img.shields.io/badge/release-v0.1.0-b80000?style=flat-square" alt="v0.1.0 pre-release" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-0A0A0A?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D20-0A0A0A?style=flat-square&logo=node.js&logoColor=white" alt="Node >=20" />
   <img src="https://img.shields.io/badge/dependencies-0-3fb950?style=flat-square" alt="Zero Dependencies" />
@@ -14,31 +15,47 @@
   <img src="https://img.shields.io/badge/standards-WCAG%202.2%20%2B%20APCA-0A0A0A?style=flat-square" alt="WCAG 2.2 and APCA" />
 </p>
 
+> **Pre-1.0 Preview (`v0.1.0`):** Core math, W3C DTCG 2025.10 resolver, CLI, SARIF 2.1.0, and GitHub Action are live and tested. [Feedback & feature requests](https://github.com/voaneves/dtcg-contrast/issues) shape the road to `v1.0.0`.
+
 <img src="./assets/demo.svg" alt="dtcg-contrast terminal output showing WCAG 2.2, APCA, and OKLCH auto-fix suggestions" width="820" />
 
 </div>
 
 ## Why `dtcg-contrast`?
 
-Most accessibility tooling audits **after** CSS compilation or browser rendering—long after broken token values have shipped to Figma, components, and docs. `dtcg-contrast` shifts compliance left directly onto your **W3C Design Tokens Community Group (DTCG) 2025.10** JSON source in ~15ms with zero npm dependencies:
-
-- **Native W3C DTCG 2025.10 parser** — supports `srgb`, `oklch`, `hsl`, `display-p3`, `hex` fallback, group `$type` inheritance, recursive folders, and multi-hop `{alias}` resolution (with cycle detection).
-- **Multi-theme ready** — evaluate `light`, `dark`, and high-contrast modes from `$extensions` paths (e.g., `vn.dark` / `mode.dark`) or overlay JSON files.
-- **Dual perceptual standards** — exact **WCAG 2.2** contrast ratio (`AA`, `AA-large`, `UI`, `AAA`, `AAA-large`) + **APCA-W3** (`0.0.98G-4g`) `Lc` scoring with alpha compositing.
-- **Hue-preserving OKLCH auto-fixer** — when a pair fails, binary-searches OKLCH lightness `L` (preserving hue `H` and gamut-mapped chroma `C`) and verifies the quantized 8-bit `#rrggbb` hex passes without rounding regressions.
-- **Four outputs + Composite GitHub Action** — 24-bit ANSI terminal swatches (`pretty`), GitHub Job Summary (`markdown`), CI automation (`json`), and a standalone interactive Contrast Matrix (`html`).
+| Capability | `dtcg-contrast` | Browser audits (`axe` / Lighthouse) | Manual Figma plugins |
+| :--- | :--- | :--- | :--- |
+| Runs at token source (~15ms, zero deps) | ✅ Pre-CSS & pre-build | ❌ Needs built app + headless browser | ❌ Manual click per frame |
+| W3C DTCG 2025.10 (`$root`, `{alias}`, `$extensions`) | ✅ Native | ❌ Sees only compiled CSS | ⚠️ Varies by plugin |
+| Dual WCAG 2.2 + APCA-W3 + alpha compositing | ✅ Built-in | ⚠️ WCAG only (no APCA) | ⚠️ Often partial |
+| Hue-preserving OKLCH auto-fix (hex-verified) | ✅ Binary-searched | ❌ Reports failures only | ❌ Manual tweaking |
+| CI outputs (SARIF 2.1.0, Job Summary, HTML Matrix) | ✅ Built-in | ⚠️ Custom wiring | ❌ No CI gate |
 
 ---
 
 ## Quick Start
 
-### Zero-config mode (auto-discovers semantic & component pairs)
+### 1. Instant one-off color check (`check`)
+
+```bash
+npx dtcg-contrast check "#f50000" "#f4ead4" --level AA
+```
+
+### 2. Scaffold config from your existing DTCG tokens (`init`)
+
+```bash
+npx dtcg-contrast init ./tokens
+# Auto-detects $extensions theme modes (e.g. vn.dark, com.figma.modes.dark)
+# and writes dtcg-contrast.config.json with discovered semantic & component pairs
+```
+
+### 3. Zero-config directory audit
 
 ```bash
 npx dtcg-contrast ./tokens --mode dark:vn.dark
 ```
 
-### Explicit CI gate (`dtcg-contrast.config.json`)
+### 4. Explicit CI gate (`dtcg-contrast.config.json`)
 
 ```json
 {
@@ -67,15 +84,18 @@ npx dtcg-contrast --config examples/voaneves-brand/demo-fail.config.json
 
 ## CLI Options
 
-| Flag | Description | Default |
+| Flag / Subcommand | Description | Default |
 | :--- | :--- | :--- |
 | `[paths...]` | DTCG token `.json` files or directories | — |
-| `-c, --config <file>` | Config JSON path (auto-detects `dtcg-contrast.config.json`) | — |
-| `-f, --format <fmt>` | Output format: `pretty`, `markdown`, `json`, `html` | `pretty` |
-| `-o, --output <file>` | Write formatted report to file | stdout |
-| `--level <level>` | Threshold for auto-discovered pairs: `AA`, `AA-large`, `UI`, `AAA`, `AAA-large` | smart (`AA`/`UI`) |
+| `check <fg> <bg>` | Check two CSS/hex/OKLCH colors directly | — |
+| `init <paths...>` | Scaffold `dtcg-contrast.config.json` from tokens | — |
+| `-c, --config <file>` | Config JSON path (auto-detects `./dtcg-contrast.config.json`) | — |
+| `-f, --format <fmt>` | Output: `pretty`, `markdown`, `json`, `html`, `sarif` | `pretty` |
+| `-o, --output <file>` | Write formatted report or `init` config to file | stdout |
+| `--level <level>` | Threshold: `AA`, `AA-large`, `UI`, `AAA`, `AAA-large` | smart (`AA`/`UI`) |
 | `--min-apca <num>` | Require minimum APCA `\|Lc\|` across evaluated pairs | `0` |
-| `--mode <name:path>` | Add a theme from `$extensions.<path>` (repeatable, e.g. `dark:vn.dark`) | `default` |
+| `--mode <name:path>` | Add theme from `$extensions.<path>` (supports dotted keys) | `default` |
+| `--force` | Overwrite existing config file when running `init` | `false` |
 | `--no-fail` | Exit `0` even when pairs fail (advisory reports) | `false` |
 | `--no-color` | Disable 24-bit ANSI swatch output | `false` |
 
@@ -83,9 +103,9 @@ Exit codes: `0` all pass, `1` one or more contrast failures, `2` invalid config/
 
 ---
 
-## GitHub Action
+## GitHub Action + SARIF Code Scanning
 
-Gate pull requests in 8 lines with an automatic Markdown report in `$GITHUB_STEP_SUMMARY` and an optional downloadable HTML Contrast Matrix:
+Gate pull requests with a Markdown Job Summary, downloadable interactive HTML Contrast Matrix, and native PR Code Scanning annotations via SARIF 2.1.0:
 
 ```yaml
 - name: Design Token Contrast Gate
@@ -93,6 +113,14 @@ Gate pull requests in 8 lines with an automatic Markdown report in `$GITHUB_STEP
   with:
     config: dtcg-contrast.config.json
     html-report: contrast-matrix.html
+    sarif-report: contrast.sarif
+    fail-on-error: 'false'
+
+- name: Upload SARIF to GitHub Code Scanning
+  if: always()
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: contrast.sarif
 ```
 
 <details>
@@ -102,10 +130,12 @@ Gate pull requests in 8 lines with an automatic Markdown report in `$GITHUB_STEP
 | :--- | :--- | :--- |
 | `config` | `''` | Path to `dtcg-contrast.config.json` |
 | `tokens` | `''` | Space-separated paths for zero-config mode |
+| `modes` | `''` | Space-separated `name:extensionPath` themes (e.g. `dark:vn.dark`) |
 | `level` | `''` | Override default WCAG threshold |
 | `min-apca` | `''` | Minimum APCA `\|Lc\|` score |
 | `fail-on-error` | `'true'` | Fail workflow step when pairs fail |
-| `html-report` | `''` | Optional output path for standalone HTML matrix |
+| `html-report` | `''` | Optional output path for standalone interactive HTML matrix |
+| `sarif-report` | `''` | Optional output path for SARIF 2.1.0 report |
 | `summary` | `'true'` | Append Markdown table to `$GITHUB_STEP_SUMMARY` |
 
 Outputs: `total`, `passed`, `failed`.
@@ -121,16 +151,17 @@ Zero runtime dependencies — works directly in Node `>=20` ESM and TypeScript p
 ```js
 import {
   loadTokenSources,
+  detectExtensionPaths,
   evaluatePairs,
   suggestAccessibleColor,
-  wcagContrast,
-  apcaContrast,
+  formatSarif,
 } from 'dtcg-contrast';
 
 const tree = loadTokenSources('./tokens');
+const modes = detectExtensionPaths(tree); // e.g. ['vn.dark']
 const report = evaluatePairs({
   tokenTree: tree,
-  themes: [{ name: 'light' }, { name: 'dark', extensionPath: 'vn.dark' }],
+  themes: [{ name: 'light' }, ...modes.map((m) => ({ name: m, extensionPath: m }))],
 });
 
 if (report.summary.failed > 0) {
@@ -138,6 +169,15 @@ if (report.summary.failed > 0) {
   // -> { hex: '#d70000', oklch: 'oklch(0.552 0.227 29.2)', wcag: 4.52, apca: 61.9, deltaL: -0.057 }
 }
 ```
+
+---
+
+## Roadmap (`v0.1.0` → `v1.0.0`)
+
+- **`v0.1.0`** *(current)*: W3C DTCG 2025.10 (`$root`, `{alias}`, dotted `$extensions`), WCAG 2.2 + APCA-W3, OKLCH auto-fixer, `check` & `init`, 5 reporters (`pretty`, `markdown`, `json`, `html`, `sarif`), composite GitHub Action.
+- **`v0.2.0`**: `--fix` mode to write OKLCH adjustments cleanly back to DTCG JSON token files (preserving formatting/comments) + automated GitHub PR comment action mode.
+- **`v0.3.0`**: Style Dictionary / Tokens Studio config bridge, glob pair wildcards (`color.text* on color.surface*`), and exact line/column source spans in SARIF.
+- **`v1.0.0`**: Frozen public API + npm & GitHub Actions Marketplace general availability.
 
 ---
 
