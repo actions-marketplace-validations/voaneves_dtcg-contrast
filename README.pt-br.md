@@ -14,7 +14,7 @@
 
 <p>
   <strong>Quality gate de contraste WCAG 2.2 &amp; APCA e corretor automático em OKLCH para design tokens W3C DTCG 2025.10 — zero dependências.</strong><br />
-  <sub>Valide o JSON de tokens em ~15ms antes mesmo de compilar CSS — CLI, API JS/TS e GitHub Action.</sub>
+  <sub>Valide o JSON de tokens em ~15ms antes mesmo de compilar CSS — <kbd>check</kbd> · <kbd>init</kbd> · <kbd>--fix</kbd> · <kbd>--format=sarif</kbd></sub>
 </p>
 
 <p>
@@ -60,7 +60,7 @@
 ## ⚡ Por que usar o `dtcg-contrast`?
 
 > [!IMPORTANT]
-> **Auditorias no browser pegam falhas tarde demais.** Quando o Lighthouse ou o `axe-core` analisa o HTML, os tokens inválidos já vazaram para o Figma, bibliotecas de UI e CSS em produção. O `dtcg-contrast` valida diretamente a fonte JSON **W3C DTCG 2025.10** em ~15ms, sem nenhuma dependência externa.
+> **Auditorias no browser pegam falhas tarde demais.** Quando o Lighthouse ou o `axe-core` analisa o HTML, os tokens inválidos já vazaram para o Figma, bibliotecas de UI e CSS em produção. O `dtcg-contrast` valida diretamente a fonte JSON **W3C DTCG 2025.10**[^1] em ~15ms, sem nenhuma dependência externa — verificando **WCAG 2.2**[^2], **APCA-W3**[^3] e gerando correções em **OKLCH**[^4].
 
 <table>
   <tr>
@@ -93,14 +93,14 @@ Resultado real em [`examples/voaneves-brand/demo-fail.config.json`](./examples/v
 | Tema | Par de Tokens | Foreground | Background | WCAG 2.2 | APCA `Lc` | Status &amp; Correção OKLCH |
 | :--- | :--- | :--- | :--- | ---: | ---: | :--- |
 | `light` | `color.text` em `color.surface` | `#0a0a0a` | `#f4ead4` | **16.56:1** | `+93.8` | ✅ `PASS (AAA)` |
-| `light` | `color.signal` em `color.surface` | `#f50000` | `#f4ead4` | **3.60:1** | `+54.6` | ❌ `FAIL` → **`#d70000`** (`ΔL -0.057`, **4.52:1**) |
+| `light` | `color.signal` em `color.surface` | ~~`#f50000`~~ → `#d70000` | `#f4ead4` | ~~3.60:1~~ → **4.52:1** | `+54.6` → `+61.9` | ❌ `FAIL` → Auto-corrigido (`ΔL -0.057`) |
 | `light` | `color.signal-ink` em `color.surface` | `#b80000` | `#f4ead4` | **5.78:1** | `+69.1` | ✅ `PASS (AA)` |
 | `light` | `color.text-on-signal` em `color.surface-signal` | `#0a0a0a` | `#f50000` | **4.60:1** | `+37.2` | ✅ `PASS (AA)` |
 | `dark` | `color.text` em `color.surface` | `#e8dec5` | `#0a0a0a` | **14.79:1** | `-86.8` | ✅ `PASS (AAA)` |
 | `dark` | `color.signal-ink` em `color.surface` | `#ff5a5a` | `#0a0a0a` | **6.47:1** | `-45.2` | ✅ `PASS (AA)` |
 | `dark` | `color.text-on-signal` em `color.surface-signal` | `#0a0a0a` | `#ff3838` | **5.54:1** | `+42.3` | ✅ `PASS (AA)` |
 
-Ao rodar `npx dtcg-contrast --config=examples/voaneves-brand/demo-fail.config.json --fix`, apenas o token semântico reprovado é ajustado (preservando `ref.color.red.600` intacto):
+Ao rodar <kbd>npx dtcg-contrast</kbd> <kbd>--fix</kbd>, apenas o token semântico reprovado é ajustado (preservando `ref.color.red.600` intacto):
 
 ```diff
      "signal": {
@@ -113,6 +113,9 @@ Ao rodar `npx dtcg-contrast --config=examples/voaneves-brand/demo-fail.config.js
        "$extensions": { "vn": { "dark": "{ref.color.red.450}" } }
      },
 ```
+
+> [!WARNING]
+> **Simule sempre com <kbd>--dry-run</kbd> ou revise o `git diff` antes de comitar o <kbd>--fix</kbd>:** quando um token semântico reprovado aponta para um primitivo compartilhado (`{ref.color.red.600}`), o `--fix` desvincula apenas o token semântico de foreground (`[unlinked alias]`) para proteger superfícies que compartilham a mesma referência.
 
 <a id="arquitetura"></a>
 ## 🧭 Arquitetura
@@ -151,8 +154,27 @@ npx dtcg-contrast --config=dtcg-contrast.config.json --fix
 npx dtcg-contrast --config examples/voaneves-brand/dtcg-contrast.config.json
 ```
 
+<dl>
+  <dt><strong>Códigos de Saída (CLI)</strong></dt>
+  <dd><code>0</code> — todos os pares passaram (ou <code>--no-fail</code>) · <code>1</code> — há falhas de contraste · <code>2</code> — erro de uso, config ou token.</dd>
+  <dt><strong>Níveis WCAG 2.2</strong></dt>
+  <dd><code>AA</code> = 4.5:1 (texto) · <code>AA-large</code> = 3.0:1 (texto grande) · <code>UI</code> = 3.0:1 (bordas, ícones, foco) · <code>AAA</code> = 7.0:1.</dd>
+</dl>
+
 <a id="github-action"></a>
 ## 🤖 GitHub Action + Comentário no PR + SARIF
+
+```mermaid
+sequenceDiagram
+  actor Dev as Dev
+  participant PR as Pull Request
+  participant Gate as dtcg-contrast@v1
+  participant CS as Code Scanning
+  Dev->>PR: Envia tokens.json
+  PR->>Gate: Roda validação (~15ms)
+  Gate-->>PR: Publica/atualiza comentário fixo
+  Gate-->>CS: Envia SARIF 2.1.0 com linha e coluna
+```
 
 ```yaml
 - name: Gate de Contraste nos Design Tokens
@@ -182,29 +204,24 @@ Consulte o [README em inglês](./README.md) para a referência completa de CLI, 
 <a id="consultoria"></a>
 ## 🤝 Estudo de Caso &amp; Consultoria
 
-Construído em conjunto com [`@voaneves/brand`](https://github.com/voaneves/brand) — o design system em produção do [`voaneves.com`](https://voaneves.com) com zero dependências de runtime.
+Construído em conjunto com [`@voaneves/brand`][brand] — o design system em produção do [`voaneves.com`][site] com zero dependências de runtime.
 
-<table>
-  <tr>
-    <td width="60%" valign="top">
-      <h3>Design Systems, Acessibilidade &amp; Quality Gates</h3>
-      <ul>
-        <li><strong>Design Systems W3C DTCG:</strong> Pipelines multi-tema de tokens integrados do Figma ao código</li>
-        <li><strong>Conformidade WCAG 2.2 AA / LBI / EAA:</strong> Auditoria técnica completa de contraste, foco e semântica</li>
-        <li><strong>Quality Gates em CI/GitOps:</strong> Lighthouse CI, Playwright, axe-core e governança automatizada</li>
-      </ul>
-    </td>
-    <td width="40%" valign="middle" align="center">
-      <p><strong>Brasil e exterior · Remoto ou híbrido</strong></p>
-      <p>
-        <a href="https://voaneves.com"><strong>🌐 voaneves.com</strong></a><br />
-        <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
-        <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a><br />
-        <a href="https://github.com/sponsors/voaneves"><strong>💖 GitHub Sponsors</strong></a>
-      </p>
-    </td>
-  </tr>
-</table>
+<dl>
+  <dt><strong>Arquitetura de Design Systems W3C DTCG</strong></dt>
+  <dd>Pipelines multi-tema de tokens sincronizados do Figma para CSS, Astro, React, iOS e Android.</dd>
+  <dt><strong>Auditorias de Acessibilidade WCAG 2.2 AA / LBI / EAA</strong></dt>
+  <dd>Auditoria técnica de contraste, legibilidade perceptual APCA, foco e semântica de UI.</dd>
+  <dt><strong>Quality Gates Automatizados em CI/GitOps</strong></dt>
+  <dd>Implantação de Lighthouse CI, Playwright, axe-core e governança automatizada antes do merge.</dd>
+</dl>
+
+<p align="center">
+  <strong>Brasil e exterior · Remoto ou híbrido</strong><br />
+  <a href="https://voaneves.com"><strong>🌐 voaneves.com</strong></a> ·
+  <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
+  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a> ·
+  <a href="https://github.com/sponsors/voaneves"><strong>💖 GitHub Sponsors</strong></a>
+</p>
 
 <div align="center">
   <a href="https://voaneves.com">
@@ -219,3 +236,11 @@ Construído em conjunto com [`@voaneves/brand`](https://github.com/voaneves/bran
 </div>
 
 <p align="right"><a href="#top">↑ Voltar ao topo</a></p>
+
+[^1]: **W3C Design Tokens Format Module 2025.10** — [tr.designtokens.org/format](https://tr.designtokens.org/format/)
+[^2]: **W3C WCAG 2.2 Contrast (Minimum &amp; Non-text)** — [w3.org/TR/WCAG22](https://www.w3.org/TR/WCAG22/#contrast-minimum)
+[^3]: **APCA-W3 (`0.0.98G-4g`) Perceptual Contrast** — [git.apcacontrast.com](https://git.apcacontrast.com/)
+[^4]: **Björn Ottosson — Oklab / OKLCH Perceptual Color Space** — [bottosson.github.io/posts/oklab](https://bottosson.github.io/posts/oklab/)
+
+[brand]: https://github.com/voaneves/brand
+[site]: https://voaneves.com
