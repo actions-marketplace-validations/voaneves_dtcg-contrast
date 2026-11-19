@@ -229,6 +229,54 @@ describe('dtcg-contrast CLI', () => {
     }
   });
 
+  it('supports --flag=value syntax, UTF-8 BOM JSON files, schema generation, and export/DTS parity', async () => {
+    const eqRes = runBin([`--config=${PASS_CFG}`, '--format=json']);
+    assert.equal(eqRes.code, 0);
+    const parsedEq = JSON.parse(eqRes.stdout);
+    assert.equal(parsedEq.summary.total, 16);
+
+    const aaaCheck = runBin(['check', '#b80000', '#f4ead4', '--level=AAA', '--format=json']);
+    assert.equal(aaaCheck.code, 1);
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dtcg-bom-'));
+    try {
+      const bomTokens = path.join(tmpDir, 'tokens.json');
+      const bomCfg = path.join(tmpDir, 'dtcg-contrast.config.json');
+      fs.writeFileSync(
+        bomTokens,
+        '\uFEFF' +
+          JSON.stringify({
+            color: {
+              $type: 'color',
+              surface: { $value: '#ffffff' },
+              text: { $value: '#111111' },
+            },
+          }),
+        'utf8'
+      );
+
+      const initRes = runBin(['init', bomTokens, `--output=${bomCfg}`]);
+      assert.equal(initRes.code, 0);
+      const initJson = JSON.parse(fs.readFileSync(bomCfg, 'utf8'));
+      assert.match(initJson.$schema, /dtcg-contrast\.schema\.json$/);
+
+      const schema = JSON.parse(fs.readFileSync(path.join(ROOT, 'dtcg-contrast.schema.json'), 'utf8'));
+      assert.ok(schema.properties.pairs && schema.properties.themes);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+
+    const pkgExports = await import('../src/index.mjs');
+    const dts = fs.readFileSync(path.join(ROOT, 'types', 'index.d.ts'), 'utf8');
+    for (const sym of Object.keys(pkgExports)) {
+      assert.match(
+        dts,
+        new RegExp(`export (?:const|function) ${sym}\\b`),
+        `Missing declaration for ${sym} in types/index.d.ts`
+      );
+    }
+  });
+
   it('exits 2 on invalid path or option', () => {
     const missing = runBin(['./does-not-exist.json']);
     assert.equal(missing.code, 2);

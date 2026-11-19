@@ -74,4 +74,15 @@ describe('suggestAccessibleColor', () => {
     const impossible = suggestAccessibleColor('rgba(0 0 0 / 10%)', '#808080', { minWcag: 7.0 });
     assert.equal(impossible, null);
   });
+
+  it('supports APCA-only threshold and returns deltaL 0 when already passing', () => {
+    const already = suggestAccessibleColor('#0a0a0a', '#f4ead4', { minWcag: 4.5, minApca: 60 });
+    assert.ok(already !== null);
+    assert.equal(already.deltaL, 0);
+
+    const apcaOnly = suggestAccessibleColor('#888888', '#ffffff', { minWcag: 1, minApca: 75 });
+    assert.ok(apcaOnly !== null);
+    assert.ok(Math.abs(apcaOnly.apca) >= 75);
+    assert.equal(wcagContrast(parseColor(apcaOnly.hex), '#ffffff') >= 1, true);
+  });
 });

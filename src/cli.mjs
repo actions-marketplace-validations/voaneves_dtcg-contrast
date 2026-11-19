@@ -52,6 +52,30 @@ Options:
 `;
 
 function parseArgs(argv) {
+  const VALUE_FLAGS = new Set([
+    '-c',
+    '--config',
+    '-f',
+    '--format',
+    '-o',
+    '--output',
+    '--level',
+    '--min-apca',
+    '--mode',
+  ]);
+  const normalized = [];
+  for (const rawArg of argv) {
+    const eq = rawArg.indexOf('=');
+    if (rawArg.startsWith('-') && eq > 0) {
+      const flag = rawArg.slice(0, eq);
+      if (VALUE_FLAGS.has(flag)) {
+        normalized.push(flag, rawArg.slice(eq + 1));
+        continue;
+      }
+    }
+    normalized.push(rawArg);
+  }
+
   const opts = {
     paths: [],
     config: null,
@@ -69,12 +93,12 @@ function parseArgs(argv) {
     version: false,
   };
 
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
+  for (let i = 0; i < normalized.length; i += 1) {
+    const arg = normalized[i];
     const next = () => {
-      if (i + 1 >= argv.length) throw new Error(`Missing value for ${arg}`);
+      if (i + 1 >= normalized.length) throw new Error(`Missing value for ${arg}`);
       i += 1;
-      return argv[i];
+      return normalized[i];
     };
 
     if (arg === '-h' || arg === '--help') opts.help = true;
@@ -113,7 +137,7 @@ function resolveConfig(configPath) {
   if (!fs.existsSync(abs)) {
     throw new Error(`Config file not found: ${configPath}`);
   }
-  const raw = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  const raw = JSON.parse(fs.readFileSync(abs, 'utf8').replace(/^\uFEFF/, ''));
   const baseDir = path.dirname(abs);
   const rel = (p) => path.resolve(baseDir, p);
 
@@ -325,6 +349,7 @@ function runInit(argv) {
   const tokens = opts.paths.map((p) => formatConfigTokenPath(baseDir, p));
 
   const config = {
+    $schema: 'https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/dtcg-contrast.schema.json',
     tokens,
     themes,
     ...(opts.level ? { level: opts.level } : {}),

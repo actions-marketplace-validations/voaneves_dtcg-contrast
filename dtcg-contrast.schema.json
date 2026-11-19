@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/dtcg-contrast.schema.json",
+  "title": "dtcg-contrast Configuration",
+  "description": "Configuration schema for dtcg-contrast WCAG 2.2 & APCA contrast checks on W3C DTCG 2025.10 tokens.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "tokens": {
+      "description": "Path(s) to W3C DTCG token JSON files or directories.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      ]
+    },
+    "themes": {
+      "description": "Theme modes resolved via $extensions paths and/or overlay token files.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "extensionPath": { "type": "string", "minLength": 1 },
+          "overlayPaths": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "level": {
+      "description": "Default WCAG 2.2 threshold level.",
+      "type": "string",
+      "enum": ["AA", "AA-large", "UI", "AAA", "AAA-large"]
+    },
+    "minApca": {
+      "description": "Default minimum APCA |Lc| contrast value.",
+      "type": "number",
+      "minimum": 0
+    },
+    "auto": {
+      "description": "Auto-discover semantic and component token pairs.",
+      "type": "boolean"
+    },
+    "pairs": {
+      "description": "Explicit or wildcard foreground/background token pair rules.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fg", "bg"],
+        "additionalProperties": false,
+        "properties": {
+          "fg": { "type": "string", "minLength": 1 },
+          "bg": { "type": "string", "minLength": 1 },
+          "level": {
+            "type": "string",
+            "enum": ["AA", "AA-large", "UI", "AAA", "AAA-large"]
+          },
+          "minWcag": { "type": "number", "minimum": 1, "maximum": 21 },
+          "minApca": { "type": "number", "minimum": 0 },
+          "themes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "exclude": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "name": { "type": "string" },
+          "ignore": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

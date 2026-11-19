@@ -1,4 +1,5 @@
 {
+  "$schema": "../../dtcg-contrast.schema.json",
   "tokens": ["./tokens.json"],
   "themes": [
     { "name": "light" },

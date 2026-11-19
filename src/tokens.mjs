@@ -266,7 +266,7 @@ export function loadTokenSources(paths) {
   let merged = {};
   const sourceMap = new Map();
   for (const file of files) {
-    const raw = fs.readFileSync(file, 'utf8');
+    const raw = fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
     let parsed;
     try {
       parsed = JSON.parse(raw);

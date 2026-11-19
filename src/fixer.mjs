@@ -138,10 +138,15 @@ export function planFixes({ report, tokenTree, themes }) {
   return { edits, skipped };
 }
 
+const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function findTokenTarget(doc, tokenPath) {
   let cur = doc;
   for (const seg of tokenPath.split('.')) {
-    if (!cur || typeof cur !== 'object' || !(seg in cur)) return null;
+    if (UNSAFE_KEYS.has(seg)) return null;
+    if (!cur || typeof cur !== 'object' || !Object.prototype.hasOwnProperty.call(cur, seg)) {
+      return null;
+    }
     cur = cur[seg];
   }
   if (!cur || typeof cur !== 'object') return null;
@@ -164,7 +169,7 @@ function setAtExtensionPath(node, extPath, value) {
     let matchedEnd = idx;
     for (let end = segments.length; end > idx; end -= 1) {
       const candidate = segments.slice(idx, end).join('.');
-      if (Object.prototype.hasOwnProperty.call(cur, candidate)) {
+      if (!UNSAFE_KEYS.has(candidate) && Object.prototype.hasOwnProperty.call(cur, candidate)) {
         matchedKey = candidate;
         matchedEnd = end;
         break;
@@ -172,6 +177,9 @@ function setAtExtensionPath(node, extPath, value) {
     }
 
     const key = matchedKey ?? segments[idx];
+    if (UNSAFE_KEYS.has(key)) {
+      throw new Error(`Unsafe extension key "${key}" in extensionPath "${extPath}".`);
+    }
     const nextIdx = matchedKey ? matchedEnd : idx + 1;
 
     if (nextIdx === segments.length) {
@@ -205,7 +213,7 @@ export function applyFixes(edits, options = {}) {
   const filesModified = [];
 
   for (const [file, fileEdits] of byFile.entries()) {
-    const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const doc = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 
     for (const edit of fileEdits) {
       const target = findTokenTarget(doc, edit.token);

@@ -19,6 +19,7 @@
     "src",
     "types",
     "action.yml",
+    "dtcg-contrast.schema.json",
     "README.md",
     "LICENSE"
   ],
