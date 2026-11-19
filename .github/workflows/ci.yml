@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: 20
+          - os: ubuntu-latest
+            node: 22
+          - os: ubuntu-latest
+            node: 24
+          - os: windows-latest
+            node: 22
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - run: npm run example
+
+  action-dogfood:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run local composite GitHub Action
+        id: contrast
+        uses: ./
+        with:
+          config: examples/voaneves-brand/dtcg-contrast.config.json
+          html-report: contrast-matrix.html
+      - name: Verify action outputs
+        run: |
+          test "${{ steps.contrast.outputs.total }}" = "16"
+          test "${{ steps.contrast.outputs.passed }}" = "16"
+          test "${{ steps.contrast.outputs.failed }}" = "0"
+          test -f contrast-matrix.html
