@@ -32,6 +32,7 @@
 </p>
 
 <p>
+  <a href="https://voaneves.github.io/dtcg-contrast/">Página do projeto</a> ·
   <a href="#por-que-usar">Visão geral</a> ·
   <a href="#correcao-oklch">Correção OKLCH</a> ·
   <a href="#uso-rapido">Uso rápido</a> ·

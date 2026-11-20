@@ -1,0 +1,23 @@
+{
+  "repo": "dtcg-contrast",
+  "branch": "main",
+  "lang": "en",
+  "license": "MIT",
+  "name": "dtcg-contrast",
+  "tagline": "Gate WCAG 2.2 and APCA contrast on your design tokens.",
+  "description": "A zero-dependency CLI and GitHub Action that checks W3C DTCG 2025.10 design tokens for WCAG 2.2 and APCA contrast, and auto-fixes failing colors in OKLCH.",
+  "logo": { "mark": "braces" },
+  "buttons": [
+    { "id": "quick-start-en", "text": "Quick start", "kind": "primary", "font": "sans", "href": "https://github.com/voaneves/dtcg-contrast#quick-start" },
+    { "id": "npm", "text": "npm i dtcg-contrast", "kind": "command", "font": "mono", "href": "https://www.npmjs.com/package/dtcg-contrast" },
+    { "id": "audit-en", "text": "Book an accessibility audit", "kind": "primary", "font": "sans", "href": "https://voaneves.com/en/#contact", "landing": false },
+    { "id": "site", "text": "voaneves.com", "kind": "secondary", "font": "sans", "href": "https://voaneves.com/en/", "landing": false }
+  ],
+  "features": [
+    "Checks every foreground and background pair in WCAG 2.2 and APCA, in light and dark.",
+    "Auto-fixes failing colors in OKLCH while keeping the hue.",
+    "Runs as a CLI or a GitHub Action with no dependencies."
+  ],
+  "landing": true,
+  "live_url": "https://voaneves.github.io/dtcg-contrast/"
+}

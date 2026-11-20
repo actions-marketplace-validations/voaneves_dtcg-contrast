@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dtcg-contrast - Gate WCAG 2.2 and APCA contrast on your design tokens.</title>
+<meta name="description" content="A zero-dependency CLI and GitHub Action that checks W3C DTCG 2025.10 design tokens for WCAG 2.2 and APCA contrast, and auto-fixes failing colors in OKLCH.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4ead4">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121110">
+<link rel="canonical" href="https://voaneves.github.io/dtcg-contrast/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20width%3D%22512%22%20height%3D%22512%22%20role%3D%22img%22%20aria-label%3D%22dtcg-contrast%20logo%22%3E%20%20%3Cpath%20fill%3D%22%230a0a0a%22%20d%3D%22M256%208a248%20248%200%200%200%200%20496Z%22%2F%3E%20%20%3Cpath%20fill%3D%22%23f4ead4%22%20d%3D%22M256%208a248%20248%200%200%201%200%20496Z%22%2F%3E%20%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%22248%22%20fill%3D%22none%22%20stroke%3D%22%230a0a0a%22%20stroke-width%3D%2216%22%2F%3E%20%20%3Cg%20fill%3D%22none%22%20stroke-width%3D%2230%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%20%20%20%20%3Cpath%20stroke%3D%22%23f4ead4%22%20d%3D%22M198%20150C172%20150%20162%20160%20162%20186V228C162%20246%20152%20256%20126%20256C152%20256%20162%20266%20162%20284V326C162%20352%20172%20362%20198%20362%22%2F%3E%20%20%20%20%3Cpath%20stroke%3D%22%230a0a0a%22%20d%3D%22M314%20150C340%20150%20350%20160%20350%20186V228C350%20246%20360%20256%20386%20256C360%20256%20350%20266%20350%20284V326C350%20352%20340%20362%20314%20362%22%2F%3E%20%20%3C%2Fg%3E%20%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22256%22%20r%3D%2234%22%20fill%3D%22%23d70000%22%2F%3E%3C%2Fsvg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="dtcg-contrast - Gate WCAG 2.2 and APCA contrast on your design tokens.">
+<meta property="og:description" content="A zero-dependency CLI and GitHub Action that checks W3C DTCG 2025.10 design tokens for WCAG 2.2 and APCA contrast, and auto-fixes failing colors in OKLCH.">
+<meta property="og:url" content="https://voaneves.github.io/dtcg-contrast/">
+<meta property="og:image" content="https://voaneves.github.io/dtcg-contrast/logo-512.png">
+<meta property="og:image:alt" content="dtcg-contrast logo">
+<meta name="twitter:card" content="summary">
+<style>
+:root{
+  --surface:#f4ead4;
+  --surface-alt:#e8dec5;
+  --text:#0a0a0a;
+  --muted:#4a4437;
+  --link:#b80000;
+  --focus:#b80000;
+  --btn-primary-fill:#0a0a0a;
+  --btn-primary-text:#f4ead4;
+  --btn-primary-signal:#ff3838;
+  --btn-secondary-fill:#f4ead4;
+  --btn-secondary-text:#0a0a0a;
+  --btn-secondary-border:#0a0a0a;
+  --btn-command-prompt:#b80000;
+  --logo-ink:#0a0a0a;
+  --logo-paper:#f4ead4;
+  --logo-ring:#0a0a0a;
+  --logo-signal:#d70000;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+  --surface:#121110;
+    --surface-alt:#1c1a17;
+    --text:#f4ead4;
+    --muted:#b8ae98;
+    --link:#ff5a5a;
+    --focus:#ff5a5a;
+    --btn-primary-fill:#e8dec5;
+    --btn-primary-text:#0a0a0a;
+    --btn-primary-signal:#b80000;
+    --btn-secondary-fill:#1c1a17;
+    --btn-secondary-text:#e8dec5;
+    --btn-secondary-border:#8a816f;
+    --btn-command-prompt:#ff5a5a;
+    --logo-ink:#0a0a0a;
+    --logo-paper:#f4ead4;
+    --logo-ring:#e8dec5;
+    --logo-signal:#d70000;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--surface);color:var(--text);font:1.0625rem/1.6 var(--sans)}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.skip{position:absolute;left:1rem;top:-4rem;padding:.75rem 1rem;background:var(--btn-primary-fill);color:var(--btn-primary-text);border-radius:4px;font-weight:600;z-index:10}
+.skip:focus{top:1rem}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.wrap{width:100%;max-width:60rem;margin:0 auto;padding:0 1rem}
+.hero{padding:4rem 0 3rem;text-align:center}
+.logo{display:block;margin:0 auto 1.5rem;width:7rem;height:7rem}
+h1{margin:0;font-size:clamp(2rem,6vw,3.25rem);line-height:1.1;letter-spacing:-.02em}
+.tagline{margin:1rem auto 0;max-width:34rem;font-size:clamp(1.15rem,3.2vw,1.45rem);font-weight:700;line-height:1.35}
+.lead{margin:1rem auto 0;max-width:36rem;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;margin:2rem 0 0;padding:0;list-style:none}
+.btn{display:inline-flex;align-items:center;gap:.6rem;min-height:3rem;padding:0 1.25rem;border:1.5px solid transparent;border-radius:4px;font-weight:600;font-size:1rem;line-height:1;text-decoration:none;max-width:100%}
+.btn-primary{background:var(--btn-primary-fill);color:var(--btn-primary-text)}
+.btn-secondary{background:var(--btn-secondary-fill);color:var(--btn-secondary-text);border-color:var(--btn-secondary-border)}
+.btn-command{font-family:var(--mono);font-weight:500;font-size:.9375rem}
+.dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--btn-primary-signal);flex:none}
+.prompt{color:var(--btn-command-prompt)}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .15s ease}.btn:hover{transform:translateY(-1px)}}
+section{padding:2.5rem 0}
+h2{margin:0 0 1.25rem;font-size:1.5rem;line-height:1.25;letter-spacing:-.01em}
+.features{display:grid;gap:1rem;margin:0;padding:0;list-style:none;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.features li{padding:1.25rem;border-radius:8px;background:var(--surface-alt)}
+.features h3{margin:0 0 .35rem;font-size:1.0625rem}
+.features p{margin:0}
+.shot{margin:0}
+.shot img{display:block;width:100%;height:auto;border-radius:8px;background:var(--surface-alt)}
+.contact{text-align:center}
+.contact p{margin:0 auto 1.25rem;max-width:34rem;color:var(--muted)}
+a{color:var(--link);text-underline-offset:.2em}
+a.btn{text-decoration:none}
+footer{padding:2rem 0 3rem;color:var(--muted);font-size:.9375rem;text-align:center}
+footer p{margin:0}
+@media (max-width:30rem){.hero{padding-top:2.5rem}.btn{width:100%;justify-content:center}.actions{flex-direction:column;align-items:stretch}.actions li{display:flex}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<main id="main">
+  <div class="wrap">
+    <section class="hero" aria-labelledby="name">
+      <svg class="logo" viewBox="0 0 512 512" width="112" height="112" aria-hidden="true" focusable="false">
+  <path fill="var(--logo-ink)" d="M256 8a248 248 0 0 0 0 496Z"/>
+  <path fill="var(--logo-paper)" d="M256 8a248 248 0 0 1 0 496Z"/>
+  <circle cx="256" cy="256" r="248" fill="none" stroke="var(--logo-ring)" stroke-width="16"/>
+  <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="var(--logo-paper)" d="M198 150C172 150 162 160 162 186V228C162 246 152 256 126 256C152 256 162 266 162 284V326C162 352 172 362 198 362"/>
+    <path stroke="var(--logo-ink)" d="M314 150C340 150 350 160 350 186V228C350 246 360 256 386 256C360 256 350 266 350 284V326C350 352 340 362 314 362"/>
+  </g>
+  <circle cx="256" cy="256" r="34" fill="var(--logo-signal)"/>
+      </svg>
+      <h1 id="name">dtcg-contrast</h1>
+      <p class="tagline">Gate WCAG 2.2 and APCA contrast on your design tokens.</p>
+      <p class="lead">A zero-dependency CLI and GitHub Action that checks W3C DTCG 2025.10 design tokens for WCAG 2.2 and APCA contrast, and auto-fixes failing colors in OKLCH.</p>
+      <ul class="actions">
+        <li><a class="btn btn-primary" href="https://github.com/voaneves/dtcg-contrast#quick-start"><span class="dot" aria-hidden="true"></span><span>Quick start</span><span aria-hidden="true">&rarr;</span></a></li>
+        <li><a class="btn btn-secondary btn-command" href="https://www.npmjs.com/package/dtcg-contrast"><span class="prompt" aria-hidden="true">$</span><span>npm i dtcg-contrast</span></a></li>
+      </ul>
+    </section>
+    <section aria-labelledby="features-title">
+      <h2 id="features-title">Highlights</h2>
+      <ul class="features">
+        <li><p>Checks every foreground and background pair in WCAG 2.2 and APCA, in light and dark.</p></li>
+        <li><p>Auto-fixes failing colors in OKLCH while keeping the hue.</p></li>
+        <li><p>Runs as a CLI or a GitHub Action with no dependencies.</p></li>
+      </ul>
+    </section>
+    <section class="contact" aria-labelledby="hire-title">
+      <h2 id="hire-title">Need something like this?</h2>
+      <p>I build and ship projects like this for teams. Tell me what you need.</p>
+      <a class="btn btn-primary" href="https://voaneves.com/en/#contact"><span class="dot" aria-hidden="true"></span><span>Let&#x27;s talk</span><span aria-hidden="true">&rarr;</span></a>
+    </section>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    <p>Licensed under the MIT license. <a href="https://github.com/voaneves/dtcg-contrast">GitHub</a></p>
+  </div>
+</footer>
+</body>
+</html>

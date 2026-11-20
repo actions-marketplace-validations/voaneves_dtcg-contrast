@@ -1,0 +1,41 @@
+{
+  "repo": "my-project",
+  "branch": "main",
+  "lang": "en",
+  "license": "MIT",
+  "name": "my-project",
+  "tagline": "One bold sentence saying what it does for a person.",
+  "description": "One or two plain sentences, used as meta description and hero lead.",
+  "logo": { "mark": "Mp" },
+  "buttons": [
+    { "id": "demo", "text": "Open the demo", "kind": "primary", "font": "sans", "href": "https://example.com/demo" },
+    { "id": "install", "text": "pip install my-project", "kind": "command", "font": "mono", "href": "https://pypi.org/project/my-project/" },
+    { "id": "site", "text": "voaneves.com", "kind": "secondary", "font": "sans", "href": "https://voaneves.com/en/", "landing": false }
+  ],
+  "features": [
+    "First benefit, one line.",
+    "Second benefit, one line.",
+    "Third benefit, one line."
+  ],
+  "image": { "src": "https://raw.githubusercontent.com/voaneves/my-project/main/docs/screenshot.png", "alt": "What the screenshot shows", "width": 1280, "height": 720 },
+  "landing": true,
+  "live_url": "https://voaneves.github.io/my-project/",
+  "hire_href": "https://voaneves.com/en/#contact",
+
+  "_schema": {
+    "repo": "GitHub repo name (or owner/name; owner defaults to voaneves). Required.",
+    "branch": "Default branch, used in the workflow trigger. Default: main.",
+    "lang": "BCP 47 tag for <html lang> and landing copy (en or pt*). Default: en.",
+    "license": "SPDX id shown in the landing footer. Default: MIT.",
+    "name": "Project name (logo aria-label, h1, title). Required.",
+    "tagline": "One bold line. Required.",
+    "description": "Meta description and hero lead. Optional (falls back to tagline).",
+    "logo": "{ mark: 'braces' | 1-2 char monogram } OR { existing: 'path/in/repo.svg' } (skips logo generation).",
+    "buttons": "[{ id, text, kind: primary|secondary|command, font: sans|mono, href, landing?: false to hide in the landing hero }]. Generates assets/buttons/<id>-{light,dark}.svg.",
+    "features": "Exactly 3 strings (or { title, text }). Required when landing is true.",
+    "image": "Optional landing screenshot { src (absolute URL), alt, width?, height? }.",
+    "landing": "true to generate landing/index.html and the deploy job.",
+    "live_url": "Optional canonical/og:url of the landing page.",
+    "hire_href": "Optional override of the hire link (default by lang: voaneves.com/en/#contact or voaneves.com/#contato)."
+  }
+}
