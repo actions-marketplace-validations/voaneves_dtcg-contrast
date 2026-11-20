@@ -5,9 +5,9 @@
 <p><a href="./README.md">🇺🇸 English</a> · 🇧🇷 <strong>Português (PT-BR)</strong></p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" />
-  <img alt="dtcg-contrast — Marca VOANEVES. Conceito B" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" width="84" height="84" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/logo/logo-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/logo/logo-light.svg" />
+  <img alt="Logo do dtcg-contrast: disco dividido em tinta e papel com chaves de token e um sinal vermelho de contraste" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/logo/logo-light.svg" width="112" height="112" />
 </picture>
 
 <h1>dtcg-contrast</h1>
@@ -15,6 +15,12 @@
 <p>
   <strong>Quality gate de contraste WCAG 2.2 &amp; APCA e corretor automático em OKLCH para design tokens W3C DTCG 2025.10 — zero dependências.</strong><br />
   <sub>Valide o JSON de tokens em ~15ms antes mesmo de compilar CSS — <kbd>check</kbd> · <kbd>init</kbd> · <kbd>--fix</kbd> · <kbd>--format=sarif</kbd></sub>
+</p>
+
+<p>
+  <a href="#uso-rapido"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/quick-start-pt-dark.svg" /><img alt="Começo rápido" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/quick-start-pt-light.svg" height="40" /></picture></a>
+  <a href="https://www.npmjs.com/package/dtcg-contrast"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/npm-dark.svg" /><img alt="npm i dtcg-contrast" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/npm-light.svg" height="40" /></picture></a>
+  <a href="#github-action"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/action-dark.svg" /><img alt="GitHub Action" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/action-light.svg" height="40" /></picture></a>
 </p>
 
 <p>
@@ -216,11 +222,14 @@ Construído em conjunto com [`@voaneves/brand`][brand] — o design system em pr
 </dl>
 
 <p align="center">
+  <a href="https://voaneves.com/#contato"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/audit-pt-dark.svg" /><img alt="Agende uma auditoria de acessibilidade" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/audit-pt-light.svg" height="40" /></picture></a>
+  <a href="https://voaneves.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/site-dark.svg" /><img alt="voaneves.com" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/site-light.svg" height="40" /></picture></a>
+</p>
+
+<p align="center">
   <strong>Brasil e exterior · Remoto ou híbrido</strong><br />
-  <a href="https://voaneves.com"><strong>🌐 voaneves.com</strong></a> ·
   <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
-  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a> ·
-  <a href="https://github.com/sponsors/voaneves"><strong>💖 GitHub Sponsors</strong></a>
+  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a>
 </p>
 
 <div align="center">

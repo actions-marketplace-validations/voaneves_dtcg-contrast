@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="dtcg-contrast logo">
+  <path fill="#0a0a0a" d="M256 8a248 248 0 0 0 0 496Z"/>
+  <path fill="#f4ead4" d="M256 8a248 248 0 0 1 0 496Z"/>
+  <circle cx="256" cy="256" r="248" fill="none" stroke="#e8dec5" stroke-width="16"/>
+  <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke="#f4ead4" d="M198 150C172 150 162 160 162 186V228C162 246 152 256 126 256C152 256 162 266 162 284V326C162 352 172 362 198 362"/>
+    <path stroke="#0a0a0a" d="M314 150C340 150 350 160 350 186V228C350 246 360 256 386 256C360 256 350 266 350 284V326C350 352 340 362 314 362"/>
+  </g>
+  <circle cx="256" cy="256" r="34" fill="#d70000"/>
+</svg>
