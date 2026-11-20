@@ -467,7 +467,7 @@ LANDING_VARS = {
 
 
 def button_html(b: dict) -> str:
-    text, href, kind = esc(b["text"]), esc(b["href"]), b["kind"]
+    text, href, kind = esc(b["text"]), esc(b["href"]), b.get("landing_kind", b["kind"])
     if kind == "primary":
         inner = f'<span class="dot" aria-hidden="true"></span><span>{text}</span><span aria-hidden="true">&rarr;</span>'
         cls = "btn btn-primary"
@@ -493,7 +493,8 @@ def landing_html(m: dict, c, fonts: dict | None, repo_dir: Path, png_name: str |
         mime = {".svg": "image/svg+xml", ".png": "image/png"}.get(ext, "image/png")
         src_file = repo_dir / logo["existing"]
         shutil.copyfile(src_file, repo_dir / "landing" / f"logo{ext}")
-        logo_markup = f'<img class="logo" src="logo{ext}" alt="" width="112" height="112">'
+        w, h = int(logo.get("width", 112)), int(logo.get("height", 112))
+        logo_markup = f'<img class="logo-img" src="logo{ext}" alt="" width="{w}" height="{h}">'
         favicon = f"logo{ext}"
         og_png = "logo.png" if ext == ".png" else png_name
     else:
@@ -535,7 +536,12 @@ def landing_html(m: dict, c, fonts: dict | None, repo_dir: Path, png_name: str |
 
     live = m.get("live_url")
     og_extra = f'<meta property="og:url" content="{esc(live)}">\n' if live else ""
-    if og_png and live:
+    og_card = "summary"
+    if m.get("image"):
+        og_extra += f'<meta property="og:image" content="{esc(m["image"]["src"])}">\n'
+        og_extra += f'<meta property="og:image:alt" content="{esc(m["image"]["alt"])}">\n'
+        og_card = "summary_large_image"
+    elif og_png and live:
         og_extra += f'<meta property="og:image" content="{esc(live.rstrip("/") + "/" + og_png)}">\n'
         og_extra += f'<meta property="og:image:alt" content="{esc(name)} logo">\n'
     canonical = f'<link rel="canonical" href="{esc(live)}">\n' if live else ""
@@ -546,7 +552,7 @@ def landing_html(m: dict, c, fonts: dict | None, repo_dir: Path, png_name: str |
     repl = {
         "LANG": esc(m["lang"]), "TITLE": esc(title), "DESCRIPTION": esc(description),
         "THEME_LIGHT": c("landing.surface", "light"), "THEME_DARK": c("landing.surface", "dark"),
-        "CANONICAL": canonical, "FAVICON": esc(favicon), "OG_EXTRA": og_extra,
+        "OG_CARD": og_card, "CANONICAL": canonical, "FAVICON": esc(favicon), "OG_EXTRA": og_extra,
         "VARS_LIGHT": vars_for("light").replace("\n    ", "\n  "),
         "VARS_DARK": vars_for("dark"),
         "SKIP": esc(t["skip"]), "LOGO": logo_markup, "NAME": esc(name), "TAGLINE": esc(tagline),
