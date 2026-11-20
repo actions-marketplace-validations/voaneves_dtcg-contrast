@@ -6,7 +6,7 @@
   "name": "my-project",
   "tagline": "One bold sentence saying what it does for a person.",
   "description": "One or two plain sentences, used as meta description and hero lead.",
-  "logo": { "mark": "Mp" },
+  "logo": { "glyph": "snake", "mark": "Mp" },
   "buttons": [
     { "id": "demo", "text": "Open the demo", "kind": "primary", "font": "sans", "href": "https://example.com/demo" },
     { "id": "install", "text": "pip install my-project", "kind": "command", "font": "mono", "href": "https://pypi.org/project/my-project/" },
@@ -30,7 +30,7 @@
     "name": "Project name (logo aria-label, h1, title). Required.",
     "tagline": "One bold line. Required.",
     "description": "Meta description and hero lead. Optional (falls back to tagline).",
-    "logo": "{ mark: 'braces' | 1-2 char monogram } OR { existing: 'path/in/repo.svg', width?, height? } (skips logo generation; width/height set the landing logo size, default 112x112).",
+    "logo": "{ glyph: '<name from glyphs.py, see GLYPHS.md>', mark?: fallback monogram } OR { mark: 'braces' | 1-2 char monogram } OR { existing: 'path/in/repo.svg', width?, height? } (skips logo generation; width/height set the landing logo size, default 112x112).",
     "buttons": "[{ id, text, kind: primary|secondary|command, font: sans|mono, href, landing?: false to hide in the landing hero, landing_kind?: kind used on the landing }]. Generates assets/buttons/<id>-{light,dark}.svg.",
     "features": "Exactly 3 strings (or { title, text }). Required when landing is true.",
     "image": "Optional landing screenshot { src (absolute URL), alt, width?, height? }.",

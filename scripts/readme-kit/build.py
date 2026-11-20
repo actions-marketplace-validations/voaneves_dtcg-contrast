@@ -32,6 +32,10 @@ from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import glyphs  # noqa: E402
+
 KIT = Path(__file__).resolve().parent
 DEFAULT_FONTS = KIT.parent.parent.parent / "brand" / "fonts"
 DEFAULT_CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe"
@@ -246,6 +250,51 @@ def monogram_layout(text: str, display: Outliner) -> dict:
     }
 
 
+def glyph_body(name: str, head: str, c, theme: str, uid: str) -> str:
+    """Named pictogram: one stroke weight, paper on the ink half, ink on the
+    paper half (same clipPath polarity as monograms), one signal dot on top."""
+    if name not in glyphs.GLYPHS:
+        raise SystemExit(f"manifest: unknown logo.glyph '{name}' (see glyphs.py)")
+    g = glyphs.GLYPHS[name]
+    ink, paper, signal = c("logo.ink", theme), c("logo.paper", theme), c("logo.signal", theme)
+
+    def layer(color: str, bg: str) -> str:
+        out = ""
+        if g["soft"]:
+            out += (f'    <path fill="none" stroke="{color}" stroke-opacity="{g["soft_op"]}" '
+                    f'stroke-width="{g["soft_w"]}" stroke-linecap="round" '
+                    f'd="{" ".join(g["soft"])}"/>\n')
+        for x, y, r in g["softdots"]:
+            out += (f'    <circle cx="{x}" cy="{y}" r="{r}" fill="{color}" '
+                    f'fill-opacity="{glyphs.SOFT_DOT_OPACITY}"/>\n')
+        if g["strokes"]:
+            out += (f'    <path fill="none" stroke="{color}" stroke-width="{glyphs.STROKE}" '
+                    f'stroke-linecap="round" stroke-linejoin="round" d="{" ".join(g["strokes"])}"/>\n')
+        for d in g["fills"]:
+            out += f'    <path fill="{color}" d="{d}"/>\n'
+        for x, y, r in g["holes"]:
+            out += f'    <circle cx="{x}" cy="{y}" r="{r}" fill="{bg}"/>\n'
+        for x, y, r in g["nodes"]:
+            out += f'    <circle cx="{x}" cy="{y}" r="{r}" fill="{color}"/>\n'
+        return out
+
+    cx, cy, r = g["dot"]
+    return head + (
+        "  <defs>\n"
+        f'    <clipPath id="{uid}-l"><rect x="0" y="0" width="256" height="512"/></clipPath>\n'
+        f'    <clipPath id="{uid}-r"><rect x="256" y="0" width="256" height="512"/></clipPath>\n'
+        "  </defs>\n"
+        f'  <g clip-path="url(#{uid}-l)">\n{layer(paper, ink)}  </g>\n'
+        f'  <g clip-path="url(#{uid}-r)">\n{layer(ink, paper)}  </g>\n'
+        f'  <circle cx="{cx}" cy="{cy}" r="{r}" fill="{signal}"/>\n'
+    )
+
+
+def logo_key(logo: dict) -> str:
+    """Manifest logo block -> internal mark key. glyph wins; mark is the fallback."""
+    return f"glyph:{logo['glyph']}" if logo.get("glyph") else logo["mark"]
+
+
 def logo_body(mark: str, c, theme: str, fonts: dict, uid: str = "vn") -> str:
     """Inner SVG markup for the 512 logo. `c(name, theme)` returns a color."""
     ink, paper = c("logo.ink", theme), c("logo.paper", theme)
@@ -255,6 +304,8 @@ def logo_body(mark: str, c, theme: str, fonts: dict, uid: str = "vn") -> str:
         f'  <path fill="{paper}" d="M256 8a248 248 0 0 1 0 496Z"/>\n'
         f'  <circle cx="256" cy="256" r="248" fill="none" stroke="{ring}" stroke-width="16"/>\n'
     )
+    if mark.startswith("glyph:"):
+        return glyph_body(mark[6:], head, c, theme, uid)
     if mark == "braces":
         return head + (
             '  <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">\n'
@@ -488,7 +539,7 @@ def landing_html(m: dict, c, fonts: dict | None, repo_dir: Path, png_name: str |
     title = f"{name} - {tagline}"
 
     logo = m["logo"]
-    if "existing" in logo:
+    if "existing" in logo and "glyph" not in logo:
         ext = Path(logo["existing"]).suffix.lower()
         mime = {".svg": "image/svg+xml", ".png": "image/png"}.get(ext, "image/png")
         src_file = repo_dir / logo["existing"]
@@ -499,12 +550,12 @@ def landing_html(m: dict, c, fonts: dict | None, repo_dir: Path, png_name: str |
         og_png = "logo.png" if ext == ".png" else png_name
     else:
         css_c = lambda n, th: "var(--logo-" + n.split(".")[1] + ")"  # noqa: E731
-        body = logo_body(logo["mark"], css_c, "light", fonts, uid="vn-hero")
+        body = logo_body(logo_key(logo), css_c, "light", fonts, uid="vn-hero")
         logo_markup = (
             '<svg class="logo" viewBox="0 0 512 512" width="112" height="112" '
             'aria-hidden="true" focusable="false">\n' + body + "      </svg>"
         )
-        fav = logo_svg(name, logo["mark"], "light", fonts, c).replace("\n", "")
+        fav = logo_svg(name, logo_key(logo), "light", fonts, c).replace("\n", "")
         favicon = "data:image/svg+xml," + urllib.parse.quote(fav, safe="")
         og_png = png_name
 
@@ -578,8 +629,10 @@ def load_manifest(path: Path) -> dict:
     m.setdefault("lang", "en")
     m.setdefault("landing", False)
     logo = m["logo"]
-    if not ("existing" in logo or "mark" in logo):
-        raise SystemExit("manifest: logo needs 'mark' or 'existing'")
+    if not ("existing" in logo or "mark" in logo or "glyph" in logo):
+        raise SystemExit("manifest: logo needs 'glyph', 'mark' or 'existing'")
+    if "glyph" in logo and logo["glyph"] not in glyphs.GLYPHS:
+        raise SystemExit(f"manifest: unknown logo.glyph '{logo['glyph']}'")
     if "mark" in logo and logo["mark"] != "braces" and not 1 <= len(logo["mark"]) <= 2:
         raise SystemExit("manifest: logo.mark must be 'braces' or 1-2 characters")
     for b in m["buttons"]:
@@ -615,7 +668,7 @@ def main() -> None:
     m = load_manifest(Path(args.manifest))
     tree = build_tokens(m)
     c = Palette(tree)
-    existing_logo = "existing" in m["logo"]
+    existing_logo = "existing" in m["logo"] and "glyph" not in m["logo"]
     fonts = load_fonts(Path(args.brand_fonts))
     png_name = None
 
@@ -627,7 +680,7 @@ def main() -> None:
     if "logo" in only and not existing_logo:
         out = repo / "assets/logo"
         for theme in ("light", "dark"):
-            write(out / f"logo-{theme}.svg", logo_svg(m["name"], m["logo"]["mark"], theme, fonts, c))
+            write(out / f"logo-{theme}.svg", logo_svg(m["name"], logo_key(m["logo"]), theme, fonts, c))
         if not args.no_png:
             render_png(out / "logo-light.svg", out / "logo-512.png", args.chrome)
 
