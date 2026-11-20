@@ -1,0 +1,20 @@
+{
+  "$schema": "../../dtcg-contrast.schema.json",
+  "tokens": ["./tokens.json"],
+  "themes": [
+    { "name": "light" },
+    { "name": "dark", "extensionPath": "vn.dark" }
+  ],
+  "pairs": [
+    { "fg": "button.primary.text", "bg": "button.primary.fill", "level": "AA" },
+    { "fg": "button.primary.signal", "bg": "button.primary.fill", "level": "UI" },
+    { "fg": "button.secondary.text", "bg": "button.secondary.fill", "level": "AA" },
+    { "fg": "button.command.prompt", "bg": "button.secondary.fill", "level": "AA" },
+    { "fg": "button.secondary.border", "bg": "page", "level": "UI" },
+    { "fg": "button.primary.fill", "bg": "page", "level": "UI" },
+    { "fg": "logo.paper", "bg": "logo.ink", "level": "UI" },
+    { "fg": "logo.signal", "bg": "logo.paper", "level": "UI" },
+    { "fg": "logo.signal", "bg": "logo.ink", "level": "UI" },
+    { "fg": "logo.ring", "bg": "page", "level": "UI" }
+  ]
+}

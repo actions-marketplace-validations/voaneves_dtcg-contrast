@@ -28,7 +28,8 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "example": "node ./bin/dtcg-contrast.mjs --config examples/voaneves-brand/dtcg-contrast.config.json"
+    "example": "node ./bin/dtcg-contrast.mjs --config examples/voaneves-brand/dtcg-contrast.config.json",
+    "readme:check": "node ./bin/dtcg-contrast.mjs --config examples/readme-assets/dtcg-contrast.config.json --no-color"
   },
   "keywords": [
     "dtcg",
@@ -44,6 +45,9 @@
     "github-action"
   ],
   "author": "Victor Neves <victorneves478@gmail.com> (https://voaneves.com/en/)",
+  "bugs": {
+    "url": "https://github.com/voaneves/dtcg-contrast/issues"
+  },
   "homepage": "https://github.com/voaneves/dtcg-contrast#readme",
   "repository": {
     "type": "git",

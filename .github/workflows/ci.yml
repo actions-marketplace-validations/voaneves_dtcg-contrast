@@ -27,6 +27,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test
       - run: npm run example
+      - run: node ./bin/dtcg-contrast.mjs --config examples/readme-assets/dtcg-contrast.config.json --no-color
       - run: node ./bin/dtcg-contrast.mjs check "#0a0a0a" "#f4ead4" --no-color
       - run: node -e "import('./src/index.mjs').then(m => { if (!m.evaluatePairs || !m.planFixes || !m.formatSarif) process.exit(1); })"
       - run: npm pack --dry-run

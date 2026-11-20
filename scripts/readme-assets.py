@@ -9,6 +9,7 @@ Usage: python scripts/readme-assets.py [--brand-fonts PATH]
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -20,13 +21,40 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT_LOGO = ROOT / "assets" / "logo"
 OUT_BTN = ROOT / "assets" / "buttons"
 
-INK = "#0a0a0a"
-PAPER = "#f4ead4"
-PAPER_DARK = "#e8dec5"
-SIGNAL_FIXED = "#d70000"  # the OKLCH-fixed red from the README showcase
-SIGNAL_INK = "#b80000"
-SIGNAL_NIGHT = "#ff5a5a"
-LINE_NIGHT = "#8a816f"
+TOKENS = ROOT / "examples" / "readme-assets" / "tokens.json"
+
+
+def _hex(value) -> str:
+    return value["hex"] if isinstance(value, dict) else value
+
+
+def load_tokens(path: Path = TOKENS) -> dict:
+    """Flatten the DTCG file to {"a.b.c": {"light": hex, "dark": hex}}."""
+    out: dict = {}
+
+    def walk(node: dict, trail: list) -> None:
+        if "$value" in node:
+            light = _hex(node["$value"])
+            dark = node.get("$extensions", {}).get("vn", {}).get("dark", light)
+            out[".".join(trail)] = {"light": light, "dark": _hex(dark)}
+            return
+        for key, child in node.items():
+            if not key.startswith("$") and isinstance(child, dict):
+                walk(child, trail + [key])
+
+    walk(json.loads(path.read_text(encoding="utf-8")), [])
+    return out
+
+
+COLORS = load_tokens()
+
+
+def color(name: str, theme: str) -> str:
+    try:
+        return COLORS[name][theme]
+    except KeyError:
+        raise SystemExit(f"token '{name}' (theme '{theme}') missing in {TOKENS}") from None
+
 
 # label -> (text, kind, font)
 BUTTONS = {
@@ -74,26 +102,21 @@ class Outliner:
 
 
 def palette(kind: str, theme: str) -> dict:
-    light = theme == "light"
+    def c(name: str) -> str:
+        return color(name, theme)
+
     if kind == "primary":
         return {
-            "fill": INK if light else PAPER_DARK,
+            "fill": c("button.primary.fill"),
             "stroke": None,
-            "text": PAPER if light else INK,
-            "accent": "#ff3838" if light else SIGNAL_INK,
-        }
-    if kind == "command":
-        return {
-            "fill": PAPER if light else INK,
-            "stroke": INK if light else LINE_NIGHT,
-            "text": INK if light else PAPER_DARK,
-            "accent": SIGNAL_INK if light else SIGNAL_NIGHT,
+            "text": c("button.primary.text"),
+            "accent": c("button.primary.signal"),
         }
     return {
-        "fill": PAPER if light else INK,
-        "stroke": INK if light else LINE_NIGHT,
-        "text": INK if light else PAPER_DARK,
-        "accent": None,
+        "fill": c("button.secondary.fill"),
+        "stroke": c("button.secondary.border"),
+        "text": c("button.secondary.text"),
+        "accent": c("button.command.prompt") if kind == "command" else None,
     }
 
 
@@ -137,7 +160,8 @@ def button_svg(text: str, kind: str, fontname: str, theme: str, fonts: dict) -> 
 
 
 def logo_svg(theme: str) -> str:
-    ring = INK if theme == "light" else PAPER_DARK
+    ink, paper = color("logo.ink", theme), color("logo.paper", theme)
+    ring, signal = color("logo.ring", theme), color("logo.signal", theme)
     left_brace = (
         "M198 150C172 150 162 160 162 186V228C162 246 152 256 126 256"
         "C152 256 162 266 162 284V326C162 352 172 362 198 362"
@@ -147,14 +171,14 @@ def logo_svg(theme: str) -> str:
         "C360 256 350 266 350 284V326C350 352 340 362 314 362"
     )
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="dtcg-contrast logo">
-  <path fill="{INK}" d="M256 8a248 248 0 0 0 0 496Z"/>
-  <path fill="{PAPER}" d="M256 8a248 248 0 0 1 0 496Z"/>
+  <path fill="{ink}" d="M256 8a248 248 0 0 0 0 496Z"/>
+  <path fill="{paper}" d="M256 8a248 248 0 0 1 0 496Z"/>
   <circle cx="256" cy="256" r="248" fill="none" stroke="{ring}" stroke-width="16"/>
   <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke="{PAPER}" d="{left_brace}"/>
-    <path stroke="{INK}" d="{right_brace}"/>
+    <path stroke="{paper}" d="{left_brace}"/>
+    <path stroke="{ink}" d="{right_brace}"/>
   </g>
-  <circle cx="256" cy="256" r="34" fill="{SIGNAL_FIXED}"/>
+  <circle cx="256" cy="256" r="34" fill="{signal}"/>
 </svg>
 """
 
