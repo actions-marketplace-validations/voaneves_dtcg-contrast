@@ -223,23 +223,19 @@ O logo e os botões desta página são gerados a partir de tokens DTCG em `examp
 
 <p align="center">
   <strong>Brasil e exterior · Remoto ou híbrido</strong><br />
-  <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
-  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a>
+  <a href="https://www.linkedin.com/in/voaneves/">LinkedIn</a> ·
+  <a href="mailto:victorneves478@gmail.com">E-mail</a>
 </p>
 
 <div align="center">
   <a href="https://voaneves.com">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-dark.svg" />
-      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" />
-      <img alt="VOANEVES." src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" width="32" height="32" />
-    </picture>
+    <img alt="VOANEVES mark" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-duo.svg" width="32" height="32" />
   </a>
   <br />
   <sub><a href="./LICENSE">Licença MIT</a> © 2026 <a href="https://github.com/voaneves">Victor Neves</a> · <strong>VOANEVES.</strong> Sinal, não ruído.</sub>
 </div>
 
-<p align="right"><a href="#top">↑ Voltar ao topo</a></p>
+<p align="center"><sub><a href="#top">↑ Voltar ao topo</a></sub></p>
 
 [^1]: **W3C Design Tokens Format Module 2025.10** — [tr.designtokens.org/format](https://tr.designtokens.org/format/)
 [^2]: **W3C WCAG 2.2 Contrast (Minimum &amp; Non-text)** — [w3.org/TR/WCAG22](https://www.w3.org/TR/WCAG22/#contrast-minimum)
