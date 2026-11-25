@@ -31,27 +31,30 @@
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
 </p>
 
-<p>
-  <a href="https://voaneves.github.io/dtcg-contrast/">Página do projeto</a> ·
-  <a href="#por-que-usar">Visão geral</a> ·
-  <a href="#correcao-oklch">Correção OKLCH</a> ·
-  <a href="#uso-rapido">Uso rápido</a> ·
-  <a href="#arquitetura">Arquitetura</a> ·
-  <a href="#github-action">GitHub Action</a> ·
-  <a href="#consultoria">Consultoria</a> ·
-  <a href="./README.md">Docs completas (EN)</a>
-</p>
-
 </div>
-
-> [!NOTE]
-> Este README é um resumo. A referência completa de [opções da CLI](./README.md#cli-options), [entradas da Action](./README.md#github-action) e [API JS/TS](./README.md#api) está no README em inglês.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" />
   <img alt="" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" width="100%" />
 </picture>
+
+<details>
+  <summary><strong>Conteúdo</strong> — ir direto para uma seção</summary>
+
+- [Página do projeto](https://voaneves.github.io/dtcg-contrast/)
+- [Por que usar o dtcg-contrast?](#por-que-usar)
+- [Correção OKLCH](#correcao-oklch)
+- [Uso rápido](#uso-rapido)
+- [Arquitetura](#arquitetura)
+- [GitHub Action](#github-action)
+- [Consultoria](#consultoria)
+- [Docs completas (EN)](./README.md)
+
+</details>
+
+> [!NOTE]
+> Este README é um resumo. A referência completa de [opções da CLI](./README.md#cli-options), [entradas da Action](./README.md#github-action) e [API JS/TS](./README.md#api) está no README em inglês.
 
 <a id="por-que-usar"></a>
 ## Por que usar o `dtcg-contrast`?
@@ -223,23 +226,19 @@ O logo e os botões desta página são gerados a partir de tokens DTCG em `examp
 
 <p align="center">
   <strong>Brasil e exterior · Remoto ou híbrido</strong><br />
-  <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
-  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a>
+  <a href="https://www.linkedin.com/in/voaneves/">LinkedIn</a> ·
+  <a href="mailto:victorneves478@gmail.com">E-mail</a>
 </p>
 
 <div align="center">
   <a href="https://voaneves.com">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-dark.svg" />
-      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" />
-      <img alt="VOANEVES." src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" width="32" height="32" />
-    </picture>
+    <img alt="VOANEVES mark" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-duo.svg" width="32" height="32" />
   </a>
   <br />
   <sub><a href="./LICENSE">Licença MIT</a> © 2026 <a href="https://github.com/voaneves">Victor Neves</a> · <strong>VOANEVES.</strong> Sinal, não ruído.</sub>
 </div>
 
-<p align="right"><a href="#top">↑ Voltar ao topo</a></p>
+<p align="center"><sub><a href="#top">↑ Voltar ao topo</a></sub></p>
 
 [^1]: **W3C Design Tokens Format Module 2025.10** — [tr.designtokens.org/format](https://tr.designtokens.org/format/)
 [^2]: **W3C WCAG 2.2 Contrast (Minimum &amp; Non-text)** — [w3.org/TR/WCAG22](https://www.w3.org/TR/WCAG22/#contrast-minimum)

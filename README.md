@@ -31,17 +31,6 @@
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
 </p>
 
-<p>
-  <a href="https://voaneves.github.io/dtcg-contrast/">Landing page</a> ·
-  <a href="#live-fix">Live OKLCH Fix</a> ·
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#cli-options">CLI</a> ·
-  <a href="#github-action">GitHub Action</a> ·
-  <a href="#api">JS / TS API</a> ·
-  <a href="https://github.com/voaneves/dtcg-contrast/issues/new">Report Bug</a>
-</p>
-
 </div>
 
 <picture>
@@ -49,6 +38,22 @@
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" />
   <img alt="" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" width="100%" />
 </picture>
+
+<details>
+  <summary><strong>Contents</strong> — jump to a section</summary>
+
+- [Landing page](https://voaneves.github.io/dtcg-contrast/)
+- [Why dtcg-contrast?](#why-dtcg-contrast)
+- [Live OKLCH Auto-Fix Showcase](#live-fix)
+- [Quick Start](#quick-start)
+- [Architecture &amp; Standards Matrix](#architecture)
+- [CLI Options](#cli-options)
+- [GitHub Action &amp; SARIF](#github-action)
+- [Programmatic JS / TS API](#api)
+- [Case study &amp; consulting](#consulting)
+- [Report Bug](https://github.com/voaneves/dtcg-contrast/issues/new)
+
+</details>
 
 <a id="why-dtcg-contrast"></a>
 ## Why `dtcg-contrast`?
@@ -342,8 +347,8 @@ The logo and buttons on this page are generated from DTCG tokens in `examples/re
 ✅ **20 / 20 pairs pass** (WCAG 2.2 AA for text, 3:1 for UI) — reproduce with <kbd>npm run readme:check</kbd> or see [`examples/readme-assets/`](./examples/readme-assets/). The dark-mode button fill was tuned from `#0a0a0a` to `#1c1a17` by this gate, and the logo's red dot is `#d70000`: the exact color `--fix` produces in the showcase above.
 
 - **W3C DTCG Design System Architecture** — Multi-brand and light/dark token pipelines synced cleanly from Figma to CSS, Astro, React, iOS, and Android.
-- **WCAG 2.2 AA / EAA Accessibility Audits** — Comprehensive technical audits covering color contrast, APCA perceptual legibility, focus management, and semantic UI.
-- **Automated CI/CD &amp; GitOps Quality Gates** — Turnkey Lighthouse CI, Playwright, axe-core, and token-governance gates that block regressions before merge.
+- **WCAG 2.2 AA / EAA Accessibility Audits** — Technical audits covering color contrast, APCA perceptual legibility, focus management, and semantic UI.
+- **Automated CI/CD &amp; GitOps Quality Gates** — Lighthouse CI, Playwright, axe-core, and token-governance gates that block regressions before merge.
 
 <p align="center">
   <a href="https://voaneves.com/en/#contact"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/audit-en-dark.svg" /><img alt="Book an accessibility audit" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/buttons/audit-en-light.svg" height="40" /></picture></a>
@@ -352,23 +357,19 @@ The logo and buttons on this page are generated from DTCG tokens in `examples/re
 
 <p align="center">
   <strong>Serving Brazil &amp; Worldwide (Remote / Hybrid)</strong><br />
-  <a href="https://www.linkedin.com/in/voaneves/"><strong>💼 LinkedIn</strong></a> ·
-  <a href="mailto:victorneves478@gmail.com"><strong>✉️ E-mail</strong></a>
+  <a href="https://www.linkedin.com/in/voaneves/">LinkedIn</a> ·
+  <a href="mailto:victorneves478@gmail.com">E-mail</a>
 </p>
 
 <div align="center">
   <a href="https://voaneves.com/en/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-dark.svg" />
-      <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" />
-      <img alt="VOANEVES." src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-light.svg" width="32" height="32" />
-    </picture>
+    <img alt="VOANEVES mark" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/mark-duo.svg" width="32" height="32" />
   </a>
   <br />
   <sub><a href="./LICENSE">MIT License</a> © 2026 <a href="https://github.com/voaneves">Victor Neves</a> · <strong>VOANEVES.</strong> Signal, not noise.</sub>
 </div>
 
-<p align="right"><a href="#top">↑ Back to top</a></p>
+<p align="center"><sub><a href="#top">↑ Back to top</a></sub></p>
 
 [^1]: **W3C Design Tokens Format Module 2025.10** — [tr.designtokens.org/format](https://tr.designtokens.org/format/)
 [^2]: **W3C WCAG 2.2 Contrast (Minimum &amp; Non-text)** — [w3.org/TR/WCAG22](https://www.w3.org/TR/WCAG22/#contrast-minimum)
