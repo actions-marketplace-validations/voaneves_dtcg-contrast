@@ -31,27 +31,30 @@
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
 </p>
 
-<p>
-  <a href="https://voaneves.github.io/dtcg-contrast/">Página do projeto</a> ·
-  <a href="#por-que-usar">Visão geral</a> ·
-  <a href="#correcao-oklch">Correção OKLCH</a> ·
-  <a href="#uso-rapido">Uso rápido</a> ·
-  <a href="#arquitetura">Arquitetura</a> ·
-  <a href="#github-action">GitHub Action</a> ·
-  <a href="#consultoria">Consultoria</a> ·
-  <a href="./README.md">Docs completas (EN)</a>
-</p>
-
 </div>
-
-> [!NOTE]
-> Este README é um resumo. A referência completa de [opções da CLI](./README.md#cli-options), [entradas da Action](./README.md#github-action) e [API JS/TS](./README.md#api) está no README em inglês.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" />
   <img alt="" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" width="100%" />
 </picture>
+
+<details>
+  <summary><strong>Conteúdo</strong> — ir direto para uma seção</summary>
+
+- [Página do projeto](https://voaneves.github.io/dtcg-contrast/)
+- [Por que usar o dtcg-contrast?](#por-que-usar)
+- [Correção OKLCH](#correcao-oklch)
+- [Uso rápido](#uso-rapido)
+- [Arquitetura](#arquitetura)
+- [GitHub Action](#github-action)
+- [Consultoria](#consultoria)
+- [Docs completas (EN)](./README.md)
+
+</details>
+
+> [!NOTE]
+> Este README é um resumo. A referência completa de [opções da CLI](./README.md#cli-options), [entradas da Action](./README.md#github-action) e [API JS/TS](./README.md#api) está no README em inglês.
 
 <a id="por-que-usar"></a>
 ## Por que usar o `dtcg-contrast`?

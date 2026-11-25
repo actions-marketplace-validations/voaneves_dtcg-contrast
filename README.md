@@ -31,17 +31,6 @@
   <img src="https://img.shields.io/badge/spec-W3C%20DTCG%202025.10-b80000?style=flat-square" alt="W3C DTCG 2025.10" />
 </p>
 
-<p>
-  <a href="https://voaneves.github.io/dtcg-contrast/">Landing page</a> ·
-  <a href="#live-fix">Live OKLCH Fix</a> ·
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#cli-options">CLI</a> ·
-  <a href="#github-action">GitHub Action</a> ·
-  <a href="#api">JS / TS API</a> ·
-  <a href="https://github.com/voaneves/dtcg-contrast/issues/new">Report Bug</a>
-</p>
-
 </div>
 
 <picture>
@@ -49,6 +38,22 @@
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" />
   <img alt="" src="https://raw.githubusercontent.com/voaneves/dtcg-contrast/main/assets/brand/rule-light.svg" width="100%" />
 </picture>
+
+<details>
+  <summary><strong>Contents</strong> — jump to a section</summary>
+
+- [Landing page](https://voaneves.github.io/dtcg-contrast/)
+- [Why dtcg-contrast?](#why-dtcg-contrast)
+- [Live OKLCH Auto-Fix Showcase](#live-fix)
+- [Quick Start](#quick-start)
+- [Architecture &amp; Standards Matrix](#architecture)
+- [CLI Options](#cli-options)
+- [GitHub Action &amp; SARIF](#github-action)
+- [Programmatic JS / TS API](#api)
+- [Case study &amp; consulting](#consulting)
+- [Report Bug](https://github.com/voaneves/dtcg-contrast/issues/new)
+
+</details>
 
 <a id="why-dtcg-contrast"></a>
 ## Why `dtcg-contrast`?

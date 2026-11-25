@@ -9,8 +9,8 @@ Distilled from the dtcg-contrast UX review. Applies to every public project repo
 4. At most 2 CTA buttons (`<a><picture><source dark><img light height="40" alt=…></picture></a>`): usually the live demo / landing page plus one action (install, run, open notebook).
 5. One hire line: `<p><sub>Need something like this? <a href="https://voaneves.com/en/#contact"><strong>Let's talk →</strong></a></sub></p>` (PT: `Precisa de algo assim? … https://voaneves.com/#contato … Vamos conversar →`).
 6. At most 4 badges, only ones that are always correct (no download counters on new packages).
-7. One-line text nav to the sections (no `<details>` table of contents).
-8. Exactly one divider (`assets/brand/rule-*.svg`) between hero and first section.
+7. End the hero `<div align="center">` cleanly on the badges (no inline blue link bar inside the hero).
+8. Exactly one divider (`assets/brand/rule-*.svg`) between hero and body, followed directly by a collapsible `<details>` section index (`<summary><strong>Contents</strong> — jump to a section</summary>`, PT: `<summary><strong>Conteúdo</strong> — ir direto para uma seção</summary>`).
 
 ## Body
 9. First section opens with ONE plain-language sentence saying what the project does for a person.
